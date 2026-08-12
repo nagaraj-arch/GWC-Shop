@@ -18,6 +18,8 @@ import 'item_quantity.dart';
 import 'new_badge.dart';
 import 'price_widget.dart';
 import 'product_details_dialog/faq_tab.dart';
+import 'product_details_dialog/how_to_use_tab.dart';
+import 'product_details_dialog/ingredients_tab.dart';
 import 'rating_widget.dart';
 import 'servings_badge.dart';
 import 'video_popup.dart';
@@ -117,7 +119,7 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
     /// How To Use
     if ((item.productRecipeContent ?? '').trim().isNotEmpty) {
       tabs.add(
-        ProductTabModel(title: "How To Use", child: _howToUseTab(item)),
+        ProductTabModel(title: "How To Use", child: HowToUseTab(item: item)),
       );
     }
 
@@ -141,7 +143,7 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
       tabs.add(
         ProductTabModel(
           title: "Ingredients",
-          child: _ingredientsTab(item),
+          child: IngredientsTab(item: item),
         ),
       );
     }
@@ -916,7 +918,9 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
                     item.category?.name?.toUpperCase() ?? '',
                     style: TextStyle(
                       fontSize: fontSize08,
-                      fontFamily: fontBold,
+                      fontFamily: "Montserrat",
+                      fontWeight: FontWeight.w700,
+                      color: gBlackColor
                     ),
                   ),
                 ),
@@ -944,10 +948,10 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
           children: [
             Text(
               "${item.productTitle}  ",
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 22.dp,
-                fontWeight: FontWeight.w900,
-                fontStyle: FontStyle.italic,
+              style: TextStyle(
+                fontFamily: "Caveat",
+                fontSize: fontSize22,
+                fontWeight: FontWeight.w700,
                 color: gPrimaryColor,
               ),
             ),
@@ -973,7 +977,8 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
           style: TextStyle(
             color: gBlackColor,
             fontSize: fontSize10,
-            fontFamily: fontBook,
+            fontFamily: "Montserrat",
+            fontWeight: FontWeight.w500,
             height: 1.4,
           ),
         ),
@@ -988,7 +993,8 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
                   style: TextStyle(
                     color: gBlackColor,
                     fontSize: fontSize10,
-                    fontFamily: fontBold,
+                    fontFamily: "Montserrat",
+                    fontWeight: FontWeight.w700,
                     height: 1.4,
                   ),
                 ),
@@ -997,7 +1003,8 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
                   style: TextStyle(
                     color: gBlackColor,
                     fontSize: fontSize10,
-                    fontFamily: fontBook,
+                    fontFamily: "Montserrat",
+                    fontWeight: FontWeight.w500,
                     height: 1.4,
                   ),
                 ),
@@ -1045,9 +1052,10 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: selected ? fontBold : fontBook,
+                  fontFamily: "Montserrat",
                   color: selected ? gPrimaryColor : newLightGreyColor,
                   fontSize: selected ? fontSize12 : fontSize11,
+                  fontWeight: selected ? FontWeight.w800: FontWeight.w600,
                 ),
               ),
             ),
@@ -1143,36 +1151,6 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
   //     ],
   //   );
   // }
-
-  Widget _ingredientsTab(Products item) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: item.productIngredients!
-          .split(',')
-          .map(
-            (ingredient) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xffFFF8F0),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xffE8DED1),
-                ),
-              ),
-              child: Text(
-                ingredient.trim(),
-                style: TextStyle(
-                  fontSize: fontSize09,
-                  fontFamily: fontMedium,
-                  color: gBlackColor,
-                ),
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
 
   Widget _flavorsTab(Products item) {
     return Consumer<ProductsProvider>(
@@ -1363,122 +1341,6 @@ class _ProductDetailsDialogState extends State<ProductDetailsDialog>
           },
         );
       },
-    );
-  }
-
-  Widget _howToUseTab(Products item) {
-    final recipeContent = item.productRecipeContent ?? '';
-
-    final steps =
-        recipeContent.split('\n').where((e) => e.trim().isNotEmpty).toList();
-
-    return Column(
-      children: [
-        CommonCard(
-          elevation: 2,
-          backgroundColor: const Color(0xffFFF8F0),
-          borderClr: const Color(0xffE8DED1),
-          padding: const EdgeInsets.all(16),
-          margin: EdgeInsets.zero,
-          borderRadius: 24,
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: gPrimaryColor.withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      color: gPrimaryColor,
-                      size: 2.h,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "HOW TO USE",
-                          style: TextStyle(
-                            fontSize: fontSize10,
-                            color: gPrimaryColor,
-                            fontFamily: fontBold,
-                          ),
-                        ),
-                        Text(
-                          "Follow these easy cooking steps",
-                          style: TextStyle(
-                            color: gHintTextColor,
-                            fontSize: fontSize08,
-                            fontFamily: fontBook,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 2.h),
-              ...List.generate(
-                steps.length,
-                (index) => TweenAnimationBuilder<double>(
-                  duration: Duration(
-                    milliseconds: 300 + (index * 150),
-                  ),
-                  tween: Tween(begin: 0, end: 1),
-                  builder: (context, value, child) {
-                    return Transform.translate(
-                      offset: Offset(30 * (1 - value), 0),
-                      child: Opacity(
-                        opacity: value,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Container(
-                            width: 5,
-                            height: 5,
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            steps[index]
-                                .replaceFirst(RegExp(r'Step\s*\d+\s*:\s*'), '')
-                                .trim(),
-                            style: TextStyle(
-                              color: gBlackColor,
-                              fontSize: fontSize10,
-                              fontFamily: fontMedium,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

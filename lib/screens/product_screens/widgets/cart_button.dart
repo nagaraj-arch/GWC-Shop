@@ -18,65 +18,47 @@ class _GlobalCartButtonState extends State<GlobalCartButton> {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
 
-    bool shouldShow = cart.totalQuantity > 0;
+    return AnimatedBuilder(
+      animation: appRouter.routerDelegate,
+      builder: (context, _) {
+        final currentLocation =
+            appRouter.routerDelegate.currentConfiguration.uri.path;
 
-    if (!shouldShow) return const SizedBox.shrink();
-    return SafeArea(
-      child: AnimatedSlide(
-        duration: const Duration(milliseconds: 550),
-        curve: Curves.easeInOutCubic,
-        offset: shouldShow ? Offset.zero : const Offset(0, 3),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 500),
-          opacity: shouldShow ? 1 : 0,
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutBack,
-            scale: shouldShow ? 1 : .9,
-            child: IgnorePointer(
-              ignoring: !shouldShow,
-              child: GestureDetector(
-                onTap: () {
-                  appRouter.go("/cart");
-                },
-                child: _buildCartUI(cart, context),
+        // ❌ Hide GlobalCartButton on Cart screen
+        if (currentLocation == '/cart') {
+          return const SizedBox.shrink();
+        }
+
+        final shouldShow = cart.totalQuantity > 0;
+
+        if (!shouldShow) {
+          return const SizedBox.shrink();
+        }
+
+        return SafeArea(
+          child: AnimatedSlide(
+            duration: const Duration(milliseconds: 550),
+            curve: Curves.easeInOutCubic,
+            offset: Offset.zero,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: 1,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutBack,
+                scale: 1,
+                child: GestureDetector(
+                  onTap: () {
+                    appRouter.go('/cart');
+                  },
+                  child: _buildCartUI(cart, context),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
-    // return Positioned(
-    //   left: 0,
-    //   right: 0,
-    //   bottom: 20,
-    //   child: SafeArea(
-    //     child: AnimatedSlide(
-    //       duration: const Duration(milliseconds: 550),
-    //       curve: Curves.easeInOutCubic,
-    //       offset: shouldShow ? Offset.zero : const Offset(0, 3),
-    //       child: AnimatedOpacity(
-    //         duration: const Duration(milliseconds: 500),
-    //         curve: Curves.easeInOut,
-    //         opacity: shouldShow ? 1.0 : 0.0,
-    //         child: AnimatedScale(
-    //           duration: const Duration(milliseconds: 500),
-    //           curve: Curves.easeOutBack,
-    //           scale: shouldShow ? 1.0 : 0.9,
-    //           child: IgnorePointer(
-    //             ignoring: !shouldShow,
-    //             child: Center(
-    //               child: GestureDetector(
-    //                 onTap: () => context.go("/cart"),
-    //                 child: _buildCartUI(cart, context),
-    //               ),
-    //             ),
-    //           ),
-    //         ),
-    //       ),
-    //     ),
-    //   ),
-    // );
   }
 
   Widget _buildCartUI(CartProvider cart, BuildContext context) {

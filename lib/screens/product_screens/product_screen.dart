@@ -122,7 +122,7 @@ class _ProductScreenState extends State<ProductScreen>
                           ),
                         productsSection(responsive, provider),
                         const SizedBox(height: 40),
-                        FooterSection(),
+                        GwcFooter(),
                         const SizedBox(height: 40),
                       ],
                     ),

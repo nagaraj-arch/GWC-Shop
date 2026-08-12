@@ -244,7 +244,7 @@ class ProductsHeader extends StatelessWidget {
     final responsive = ResponsiveHelper(context);
     final isDesktop = responsive.isDesktop;
 
-    final version = "v.1.2.4";
+    final version = "v.1.0.9";
 
     return Container(
       padding: EdgeInsets.symmetric(

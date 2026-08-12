@@ -118,15 +118,17 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   void _scrollToKey(GlobalKey key) {
-    final ctx = key.currentContext;
-    if (ctx == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null) return;
 
-    Scrollable.ensureVisible(
-      ctx,
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeInOut,
-      alignment: 0,
-    );
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeInOut,
+        alignment: 0,
+      );
+    });
   }
 
   @override
@@ -145,6 +147,7 @@ class _CategoryPageState extends State<CategoryPage> {
         url != null && url.trim().isNotEmpty && url != 'null';
 
     final showCoverSection = isValidImage(category?.coverImage);
+    final showFooterSection = isValidImage(category?.footerThumnail);
 
     final contentHorizontalPadding = responsive.isMobile
         ? 20.0
@@ -180,7 +183,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   isDesktop
                       ? Row(
                           children: [
-                            Expanded(flex: 4, child: leftSection()),
+                            Expanded(flex: 5, child: leftSection()),
                             Expanded(flex: 6, child: rightSection()),
                           ],
                         )
@@ -208,7 +211,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         ? const LoadingIndicator()
                         : AdditionalProductsGrid(
                             products: shopProvider.products,
-                            category: category,
+                            category: category?.color,
                           ),
                   ),
                 ],
@@ -236,14 +239,20 @@ class _CategoryPageState extends State<CategoryPage> {
               category: category?.importantPoints,
               color: category?.color,
             ),
-            SizedBox(height: 40),
-            FooterSection(
-              footerThumbnail: category?.footerThumnail,
-              footerTitle: category?.footerTitle,
-              footerDescription: category?.footerDescription,
-              footerHighlightText: category?.footerHighlightText,
-            ),
-            const SizedBox(height: 40),
+            if (showFooterSection) ...[
+              SizedBox(height: 40),
+              FooterSection(
+                footerThumbnail: category?.footerThumnail,
+                footerThumbnailMobile: category?.footerThumnailMobile,
+                footerThumbnailTab: category?.footerThumnailTab,
+                footerThumbnailLaptop: category?.footerThumnailLaptop,
+                footerThumbnailDesktop: category?.footerThumnailDesktop,
+                footerTitle: category?.footerTitle,
+                footerDescription: category?.footerDescription,
+                footerHighlightText: category?.footerHighlightText,
+              ),
+              const SizedBox(height: 40),
+            ],
 
             LayoutBuilder(
               builder: (context, ctaConstraints) {
@@ -271,7 +280,7 @@ class _CategoryPageState extends State<CategoryPage> {
                       final shopProvider = context.read<ShopProvider>();
 
                       // Change to tab 1
-                      shopProvider.changeTab(2);
+                      shopProvider.changeTab(0);
 
                       // Navigate to home first
                       context.go("/");
@@ -322,7 +331,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 );
               },
             ),
-            SizedBox(height: 2.h),
+            SizedBox(height: 40),
           ],
         ),
       ),
@@ -330,94 +339,65 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Widget leftSection() {
-    final responsive = ScreenSizeHelper(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
 
-    final titleSize = responsive.isMobile
-        ? 34.0
-        : responsive.isTablet
-        ? 46.0
-        : responsive.isLaptop
-        ? 66.0
-        : responsive.isDesktop
-        ? 82.0
-        : responsive.isLargeDesktop
-        ? 95.0
-        : 105.0;
+        final screenWidth = MediaQuery.sizeOf(context).width;
 
-    final descSize = responsive.isMobile
-        ? 14.0
-        : responsive.isTablet
-        ? 16.0
-        : responsive.isLaptop
-        ? 18.0
-        : responsive.isDesktop
-        ? 20.0
-        : 22.0;
+        // Smaller scaling for desktop and ultra-wide screens
+        final scale = (screenWidth / 1440.0).clamp(0.82, 1.08);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Title
-        HtmlWidget(
-          category?.subTextHeading ?? "",
-          customStylesBuilder: (element) {
-            if (element.localName == 'h1' ||
-                element.localName == 'h2' ||
-                element.localName == 'p' ||
-                element.localName == 'span' ||
-                element.localName == 'div') {
-              return {
-                'font-size': '${titleSize}px',
-                'line-height': '0.9',
-                'letter-spacing': '-2px',
-              };
-            }
-            return null;
-          },
-          textStyle: TextStyle(height: 1),
-        ),
+        final titleSize = (90.0 * scale).clamp(35.0, 105.0);
+        final descSize = (22.0 * scale).clamp(14.0, 24.0);
 
-        SizedBox(
-          height: responsive.isMobile
-              ? 8
-              : responsive.isTablet
-              ? 12
-              : 16,
-        ),
-        HtmlWidget(
-          category?.subTextDescription ?? "",
-          customStylesBuilder: (element) {
-            if (element.localName == 'p' ||
-                element.localName == 'span' ||
-                element.localName == 'div') {
-              return {'font-size': '${descSize}px'};
-            }
-            return null;
-          },
-          textStyle: TextStyle(
-            height: 1.31, // Line spacing
-            letterSpacing: 1.5, // Letter spacing
-          ),
-        ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
-        // Description
-        // HtmlWidget(
-        //   category?.subTextDescription ?? "",
-        //   customStylesBuilder: (element) {
-        //     if (element.localName == 'p' ||
-        //         element.localName == 'span' ||
-        //         element.localName == 'div') {
-        //       return {
-        //         'font-size': '${descSize}px',
-        //         'line-height': '1.3',
-        //         'letter-spacing': '3px',
-        //       };
-        //     }
-        //     return null;
-        //   },
-        //   textStyle: TextStyle(height: 2, letterSpacing: 1.5),
-        // ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
-      ],
+        final titleLetterSpacing = (-1.8 * scale).clamp(-2.2, -0.7);
+
+        final descriptionLetterSpacing = (1.2 * scale).clamp(0.4, 1.6);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HtmlWidget(
+              category?.subTextHeading ?? "",
+              customStylesBuilder: (element) {
+                if (element.localName == 'h1' ||
+                    element.localName == 'h2' ||
+                    element.localName == 'p' ||
+                    element.localName == 'span' ||
+                    element.localName == 'div') {
+                  return {
+                    'font-size': '${titleSize.toStringAsFixed(1)}px',
+                    'line-height': '0.9',
+                    'letter-spacing':
+                        '${titleLetterSpacing.toStringAsFixed(2)}px',
+                  };
+                }
+                return null;
+              },
+              textStyle: const TextStyle(height: 1),
+            ),
+
+            SizedBox(height: (16.0 * scale).clamp(8.0, 18.0)),
+
+            HtmlWidget(
+              category?.subTextDescription ?? "",
+              customStylesBuilder: (element) {
+                if (element.localName == 'p' ||
+                    element.localName == 'span' ||
+                    element.localName == 'div') {
+                  return {'font-size': '${descSize.toStringAsFixed(1)}px'};
+                }
+                return null;
+              },
+              textStyle: TextStyle(
+                height: 1.31,
+                letterSpacing: descriptionLetterSpacing,
+              ),
+            ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
+          ],
+        );
+      },
     );
   }
 
@@ -446,6 +426,16 @@ class _CategoryPageState extends State<CategoryPage> {
         : responsive.isTablet
         ? 12.0
         : 16.0;
+
+    // final imageHeight = responsive.isMobile
+    //     ? 150.0
+    //     : responsive.isTablet
+    //     ? 150.0
+    //     : responsive.isLaptop
+    //     ? 140.0
+    //     : responsive.isDesktop
+    //     ? 240.0
+    //     : 280.0;
 
     return Row(
       children: [
@@ -484,8 +474,9 @@ class _CategoryPageState extends State<CategoryPage> {
             context: context,
             imageUrl: category?.subTextThubnail,
             enablePreview: false,
-            fit: BoxFit.cover,
+            fit: BoxFit.fill,
             width: double.maxFinite,
+            // height: imageHeight,
           ),
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../controllers/models/get_additional_products_model/product_flavors_model.dart';
@@ -6,7 +7,6 @@ import '../../../controllers/models/shop_models/products_by_category_model.dart'
 import '../../../controllers/providers/cart_provider.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/responsive_helper.dart';
-import '../../product_screens/widgets/flavours_popup.dart';
 
 class AnimatedCartQuantity extends StatefulWidget {
   final Products item;
@@ -166,6 +166,20 @@ class _AnimatedCartQuantityState extends State<AnimatedCartQuantity>
     CartProvider cartManager,
     List<String> selectedFlavors,
   ) {
+    if (widget.item.hasFlavours == "1") {
+      return Center(
+        child: Text(
+          "COMING SOON",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.robotoCondensed(
+            fontSize: fontSize08,
+            fontWeight: FontWeight.w700,
+            color: gWhiteColor,
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       key: const ValueKey("cart"),
       borderRadius: BorderRadius.circular(30),
@@ -174,19 +188,18 @@ class _AnimatedCartQuantityState extends State<AnimatedCartQuantity>
           context,
           Item(
             id: widget.item.productId ?? 0,
-            name: widget.item.productTitle ?? "",
-            price: double.parse(widget.item.discountPrice.toString()),
+            name: widget.item.productTitle ?? '',
+            price: double.parse(widget.item.discountPrice ?? "0"),
             description: widget.item.productDescription,
-            category: widget.item.category?.name ?? "",
+            category: widget.item.category?.name ?? '',
             specialTag: widget.item.productSpecialTag,
             weight: widget.item.itemQty,
             unitId: widget.item.weightType?.id.toString(),
             unitName: widget.item.weightType?.unit,
             servings: widget.item.servings,
-            thumbnail: widget.item.productThumbnails?.first,
+            thumbnail: widget.item.productThumbnailsUrls?.first,
           ),
         );
-
         bounceController.forward(from: 0);
         shakeController.forward(from: 0);
       },
@@ -222,32 +235,11 @@ class _AnimatedCartQuantityState extends State<AnimatedCartQuantity>
     return Row(
       children: [
         _circleButton(Icons.remove, () {
-          if (widget.item.hasFlavours == "1") {
-            showDialog(
-              context: context,
-              builder: (_) => FlavorSelectionDialog(
-                product: widget.item,
-                selectedFlavorNames: selectedFlavors,
-                onConfirm: (newSelectedFlavors) {
-                  updateFlavors(
-                    context: context,
-                    item: widget.item,
-                    oldFlavors: selectedFlavors,
-                    newSelectedFlavors: newSelectedFlavors,
-                  );
-                },
-              ),
-            );
-          } else {
-            cartManager.removeItem(
-              context,
-              widget.item.productId ?? 0,
-              cartItem.flavorName,
-            );
-
-            bounceController.forward(from: 0);
-            shakeController.forward(from: 0);
-          }
+          cartManager.removeItem(
+            context,
+            widget.item.productId ?? 0,
+            cartItem.flavorName,
+          );
         }),
 
         Expanded(
@@ -274,43 +266,25 @@ class _AnimatedCartQuantityState extends State<AnimatedCartQuantity>
         ),
 
         _circleButton(Icons.add, () {
-          if (widget.item.hasFlavours == "1") {
-            showDialog(
-              context: context,
-              builder: (_) => FlavorSelectionDialog(
-                product: widget.item,
-                selectedFlavorNames: selectedFlavors,
-                onConfirm: (newSelectedFlavors) {
-                  updateFlavors(
-                    context: context,
-                    item: widget.item,
-                    oldFlavors: selectedFlavors,
-                    newSelectedFlavors: newSelectedFlavors,
-                  );
-                },
-              ),
-            );
-          } else {
-            cartManager.addItem(
-              context,
-              Item(
-                id: widget.item.productId ?? 0,
-                name: widget.item.productTitle ?? "",
-                price: double.parse(widget.item.discountPrice.toString()),
-                description: widget.item.productDescription,
-                category: widget.item.category?.name ?? "",
-                specialTag: widget.item.productSpecialTag,
-                weight: widget.item.itemQty,
-                unitId: widget.item.weightType?.id.toString(),
-                unitName: widget.item.weightType?.unit,
-                servings: widget.item.servings,
-                thumbnail: widget.item.productThumbnails?.first,
-              ),
-            );
+          cartManager.addItem(
+            context,
+            Item(
+              id: widget.item.productId ?? 0,
+              name: widget.item.productTitle ?? '',
+              price: double.parse(widget.item.discountPrice ?? "0"),
+              description: widget.item.productDescription,
+              category: widget.item.category?.name ?? '',
+              specialTag: widget.item.productSpecialTag,
+              weight: widget.item.itemQty,
+              unitId: widget.item.weightType?.id.toString(),
+              unitName: widget.item.weightType?.unit,
+              servings: widget.item.servings,
+              thumbnail: widget.item.productThumbnailsUrls?.first,
+            ),
+          );
 
-            bounceController.forward(from: 0);
-            shakeController.forward(from: 0);
-          }
+          bounceController.forward(from: 0);
+          shakeController.forward(from: 0);
         }),
       ],
     );

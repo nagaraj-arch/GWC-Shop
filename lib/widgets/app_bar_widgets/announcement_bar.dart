@@ -35,7 +35,7 @@ class AnnouncementBar extends StatelessWidget {
 
     return Container(
       height: isDesktop ? 40 : 34,
-      color: gPrimaryColor,
+      color: Color(0xffC41a0f),
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 20 : 12,
       ),
@@ -44,7 +44,7 @@ class AnnouncementBar extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              "Free shipping on orders above ₹499",
+              "Free shipping on orders above ₹799",
               style: announcementTextStyle(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -77,7 +77,7 @@ class AnnouncementBar extends StatelessWidget {
       )
           : Marquee(
         text:
-        "🚚 Free shipping on orders above ₹499     •     🌿 Your gut asks for care every day. Start with what you eat.     •     🥗 Food-Only Formulations",
+        "🚚 Free shipping on orders above ₹799     •     🌿 Your gut asks for care every day. Start with what you eat.     •     🥗 Food-Only Formulations",
         style: announcementTextStyle(),
         blankSpace: 60,
         velocity: 40,

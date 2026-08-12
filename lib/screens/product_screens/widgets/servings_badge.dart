@@ -54,8 +54,9 @@ class ItemInfoBadge extends StatelessWidget {
         values.join(" | "),
         style: TextStyle(
           fontSize: fontSize ?? fontSize09,
-          fontFamily: fontMedium,
+          fontFamily: "Courier Prime",
           color: textColor,
+          fontWeight: FontWeight.w400
         ),
       ),
     );

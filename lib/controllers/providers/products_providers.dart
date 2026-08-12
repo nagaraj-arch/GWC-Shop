@@ -132,25 +132,69 @@ class ProductsProvider extends ChangeNotifier {
   /// ADDITIONAL PRODUCTS
 
   List<Products> additionalProducts = [];
+  List<Products> foodFarmacyProducts =[];
+
+  bool isSearchOpen = false;
+
+  void openSearch() {
+    isSearchOpen = true;
+    notifyListeners();
+  }
+
+  void closeSearch() {
+    isSearchOpen = false;
+    searchController.clear();
+    clearSearch();
+    notifyListeners();
+  }
+
+  /// Global search results for DashboardAppBar
+  List<Products> get searchResults {
+    final query = searchController.text.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      return [];
+    }
+
+    return additionalProducts.where((product) {
+      return (product.productTitle ?? '').toLowerCase().contains(query) ||
+          (product.productDescription ?? '').toLowerCase().contains(query) ||
+          (product.category?.name ?? '').toLowerCase().contains(query) ||
+          (product.productSpecialTag ?? '').toLowerCase().contains(query);
+    }).toList();
+  }
 
   Future<void> fetchAdditionalProducts() async {
     setLoading(LoadingType.getAdditionalProducts, true);
 
     try {
       final data = await NetworkService.get(getAdditionalProductsUrl);
+
       if (data['success'] == true) {
         final model = GetAdditionalProductsModel.fromJson(data);
-        additionalProducts = model.data ?? [];
 
-        if (kReleaseMode) {
-          additionalProducts = additionalProducts
-              .where((e) => e.hasFlavours?.toString() != "1")
-              .toList();
-        }
+        final allProducts = model.data ?? [];
+
+        foodFarmacyProducts = allProducts
+            .where((product) => product.category?.id?.toString() == "32")
+            .toList();
+
+        additionalProducts = allProducts;
 
         additionalProducts.sort((a, b) {
-          final orderA = int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
-          final orderB = int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
+          final orderA =
+              int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
+          final orderB =
+              int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
+
+          return orderA.compareTo(orderB);
+        });
+
+        foodFarmacyProducts.sort((a, b) {
+          final orderA =
+              int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
+          final orderB =
+              int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
 
           return orderA.compareTo(orderB);
         });

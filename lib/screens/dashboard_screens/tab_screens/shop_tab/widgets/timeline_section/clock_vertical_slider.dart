@@ -11,12 +11,11 @@ import '../../../../widgets/animated_cart_quantity.dart';
 
 class GutClockVerticalSlider extends StatefulWidget {
   final String categoryName;
-  final List<dynamic> products; // ✅ Added products list
-
+  final List<Products> products; // ✅ Added products list
   const GutClockVerticalSlider({
     super.key,
     required this.categoryName,
-    required this.products, // ✅ Required products
+    required this.products,
   });
 
   @override
@@ -52,7 +51,9 @@ class _GutClockVerticalSliderState extends State<GutClockVerticalSlider> {
         if (_controller.hasClients) {
           _controller.jumpToPage(0);
         }
-        context.read<ShopProvider>().selectTimelineCategory(widget.categoryName);
+        context.read<ShopProvider>().selectTimelineCategory(
+          widget.categoryName,
+        );
       });
     }
   }
@@ -100,10 +101,7 @@ class _GutClockVerticalSliderState extends State<GutClockVerticalSlider> {
       height: 520,
       child: Column(
         children: [
-          _arrowButton(
-            icon: Icons.arrow_upward_rounded,
-            onTap: _previous,
-          ),
+          _arrowButton(icon: Icons.arrow_upward_rounded, onTap: _previous),
           Expanded(
             child: PageView.builder(
               controller: _controller,
@@ -114,14 +112,13 @@ class _GutClockVerticalSliderState extends State<GutClockVerticalSlider> {
                 setState(() => current = index);
               },
               itemBuilder: (_, index) {
-                return GutClockVerticalProductCard(item: products[index]);
+                return GutClockVerticalProductCard(
+                  item: products[index],
+                );
               },
             ),
           ),
-          _arrowButton(
-            icon: Icons.arrow_downward_rounded,
-            onTap: _next,
-          ),
+          _arrowButton(icon: Icons.arrow_downward_rounded, onTap: _next),
         ],
       ),
     );
@@ -244,7 +241,7 @@ class _GutClockVerticalProductCardState
                             ],
                           ),
                         ),
-                        AnimatedCartQuantity(item: widget.item),
+                          AnimatedCartQuantity(item: widget.item),
                       ],
                     ),
                   ],

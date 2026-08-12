@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../controllers/models/shop_models/category_model.dart';
 import '../../../controllers/models/shop_models/products_by_category_model.dart';
 import '../../../utils/responsive_helper.dart';
 import '../../../widgets/iamge_picker_widget/thumbnail_view.dart';
@@ -48,7 +47,7 @@ class _CardSizing {
         buttonHeight: 30,
         iconSize: 11,
         contentPadding: 6,
-        imageHeightMultiplier: 0.95,
+        imageHeightMultiplier: 0.78,
         titleTwoLines: true,
         rowGap1: 4,
         rowGap2: 5,
@@ -62,7 +61,7 @@ class _CardSizing {
         buttonHeight: 34,
         iconSize: 14,
         contentPadding: 8,
-        imageHeightMultiplier: 0.90,
+        imageHeightMultiplier: 0.80,
         titleTwoLines: false,
         rowGap1: 6,
         rowGap2: 8,
@@ -76,7 +75,7 @@ class _CardSizing {
         buttonHeight: 36,
         iconSize: 16,
         contentPadding: 10,
-        imageHeightMultiplier: 0.75,
+        imageHeightMultiplier: 0.80,
         titleTwoLines: false,
         rowGap1: 6,
         rowGap2: 8,
@@ -90,7 +89,7 @@ class _CardSizing {
         buttonHeight: 38,
         iconSize: 16,
         contentPadding: 10,
-        imageHeightMultiplier: 0.78,
+        imageHeightMultiplier: 0.88,
         titleTwoLines: false,
         rowGap1: 6,
         rowGap2: 8,
@@ -104,7 +103,7 @@ class _CardSizing {
         buttonHeight: 40,
         iconSize: 18,
         contentPadding: 12,
-        imageHeightMultiplier: 0.75,
+        imageHeightMultiplier: 0.94,
         titleTwoLines: false,
         rowGap1: 6,
         rowGap2: 8,
@@ -121,30 +120,36 @@ class _CardSizing {
   // differences don't cause the Spacer below to overflow.
   double get textBlockHeight =>
       contentPadding +
-          (titleSize * 1.3 * (titleTwoLines ? 2 : 1)) +
-          rowGap1 +
-          (priceSize * 1.3) +
-          rowGap2 +
-          (infoSize * 1.3);
+      (titleSize * 1.3 * (titleTwoLines ? 2 : 1)) +
+      rowGap1 +
+      (priceSize * 1.3) +
+      rowGap2 +
+      (infoSize * 1.3);
 
   double get buttonSectionHeight => buttonHeight + contentPadding * 2;
 }
 
 class AdditionalProductsGrid extends StatelessWidget {
   final List<Products> products;
-  final CategoryList? category;
+  final Color? category;
+  final bool isShop;
+
+  final bool mobileDesign;
+  final bool showAllProducts;
 
   const AdditionalProductsGrid({
     super.key,
     required this.products,
     this.category,
+    this.isShop = false,
+    this.mobileDesign = false,
+    this.showAllProducts = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
     final sizing = _CardSizing.forBreakpoint(responsive);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -152,17 +157,21 @@ class AdditionalProductsGrid extends StatelessWidget {
         int count = responsive.isMobile
             ? 2
             : responsive.isTablet
-            ? 2
-            : responsive.isLaptop
             ? 3
-            : responsive.isDesktop
+            : responsive.isLaptop
             ? 4
-            : responsive.isLargeDesktop
+            : responsive.isDesktop
             ? 5
-            : 6;
+            : responsive.isLargeDesktop
+            ? 6
+            : 7;
+
+        final visibleProducts = mobileDesign && !showAllProducts
+            ? products.take(count).toList()
+            : products;
 
         final spacing = responsive.isMobile ? 20.0 : 40.0;
-        final padding = responsive.isMobile ? 12.0 : 60.0;
+        final padding = responsive.isMobile || responsive.isTablet ? 0.0 : 0.0;
 
         final cardWidth = (width - padding * 2 - spacing * (count - 1)) / count;
 
@@ -177,7 +186,8 @@ class AdditionalProductsGrid extends StatelessWidget {
         // required height for the *current* cardWidth and using
         // mainAxisExtent instead fixes this at every width, not just
         // the handful originally eyeballed.
-        final mainAxisExtent = sizing.imageHeight(cardWidth) +
+        final mainAxisExtent =
+            sizing.imageHeight(cardWidth) +
             sizing.textBlockHeight +
             sizing.gapBeforeButton +
             sizing.buttonSectionHeight;
@@ -189,14 +199,18 @@ class AdditionalProductsGrid extends StatelessWidget {
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: count,
             crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing +10,
+            mainAxisSpacing: spacing + 10,
             mainAxisExtent: mainAxisExtent,
           ),
-          itemCount: products.length,
+          itemCount: visibleProducts.length,
           itemBuilder: (_, i) => ProductCard(
-            key: ValueKey('${products[i].productTitle}_$i'),
-            item: products[i],
-            category: category,
+            key: ValueKey(
+              '${visibleProducts[i].productTitle}_$i',
+            ),
+            item: visibleProducts[i],
+            category: isShop
+                ? visibleProducts[i].category?.color
+                : category,
             cardWidth: cardWidth,
           ),
         );
@@ -207,7 +221,7 @@ class AdditionalProductsGrid extends StatelessWidget {
 
 class ProductCard extends StatefulWidget {
   final Products item;
-  final CategoryList? category;
+  final Color? category;
   final double cardWidth;
 
   const ProductCard({
@@ -265,7 +279,7 @@ class _ProductCardState extends State<ProductCard> {
         scale: hover ? 1.02 : 1,
         child: Container(
           decoration: BoxDecoration(
-            color: widget.category?.color ?? const Color(0xff3B2415),
+            color: widget.category ?? const Color(0xff3B2415),
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
@@ -278,23 +292,17 @@ class _ProductCardState extends State<ProductCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               /// IMAGE
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: ThumbnailView(
-                  context: context,
-                  imageUrl: widget.item.productThumbnailsUrls?.first ?? "",
-                  enablePreview: false,
-                  borderRadius: 12,
-                  height: imageHeight,
-                  width: double.infinity,
-                  // BoxFit.fill stretches product photos non-uniformly;
-                  // BoxFit.cover preserves their real proportions.
-                  fit: BoxFit.cover,
-                ),
+              ThumbnailView(
+                context: context,
+                imageUrl: widget.item.productThumbnailsUrls?.first ?? "",
+                enablePreview: false,
+                borderRadius: 8,
+                height: imageHeight,
+                width: double.infinity,
+                // BoxFit.fill stretches product photos non-uniformly;
+                // BoxFit.cover preserves their real proportions.
+                fit: BoxFit.fill,
               ),
 
               Padding(
@@ -308,7 +316,6 @@ class _ProductCardState extends State<ProductCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     /// PRODUCT NAME
                     Row(
                       children: [
@@ -322,14 +329,14 @@ class _ProductCardState extends State<ProductCard> {
 
                         Expanded(
                           child: Text(
-                              widget.item.productTitle ?? "",
-                              maxLines: responsive.isMobile ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.robotoCondensed(
-                                fontSize: titleSize,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              )
+                            widget.item.productTitle ?? "",
+                            maxLines: responsive.isMobile ? 2 : 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.robotoCondensed(
+                              fontSize: titleSize,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -342,28 +349,26 @@ class _ProductCardState extends State<ProductCard> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                            "₹${double
-                                .parse(widget.item.discountPrice ?? "0")
-                                .toStringAsFixed(0)}",
-                            style: GoogleFonts.robotoCondensed(
-                              fontSize: priceSize,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            )
+                          "₹${double.parse(widget.item.discountPrice ?? "0").toStringAsFixed(0)}",
+                          style: GoogleFonts.robotoCondensed(
+                            fontSize: priceSize,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
 
                         SizedBox(width: responsive.isMobile ? 6 : 10),
 
                         Expanded(
                           child: Text(
-                              values.join(" | "),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.roboto(
-                                fontSize: infoSize,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white70,
-                              )
+                            values.join(" | "),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.roboto(
+                              fontSize: infoSize,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white70,
+                            ),
                           ),
                         ),
                       ],
@@ -378,21 +383,19 @@ class _ProductCardState extends State<ProductCard> {
                           context: context,
                           barrierDismissible: true,
                           builder: (_) =>
-                              ProductDetailsDialog(
-                                item: widget.item,
-                              ),
+                              ProductDetailsDialog(item: widget.item),
                         );
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                              "What's inside",
-                              style: GoogleFonts.roboto(
-                                fontSize: infoSize,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xffE7D5C3),
-                              )
+                            "What's inside",
+                            style: GoogleFonts.roboto(
+                              fontSize: infoSize,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xffE7D5C3),
+                            ),
                           ),
 
                           SizedBox(width: responsive.isMobile ? 4 : 6),
@@ -431,7 +434,7 @@ class _ProductCardState extends State<ProductCard> {
                   width: double.infinity,
                   child: CommonCartButton(
                     product: widget.item,
-                    color: widget.category?.color ?? const Color(0xff3B2415),
+                    color: widget.category ?? const Color(0xff3B2415),
                     height: buttonHeight,
                   ),
                 ),

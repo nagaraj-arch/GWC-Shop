@@ -1,71 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:gwc_shop/utils/constants.dart';
-import 'package:gwc_shop/widgets/container_widgets/common_divider.dart';
 import 'package:provider/provider.dart';
 
 import '../../../controllers/models/shop_models/category_model.dart';
 import '../../../controllers/providers/shop_provider.dart';
 import '../../../utils/app_config.dart';
-import '../../../utils/responsive_helper.dart';
+import '../../utils/constants.dart';
+import '../../widgets/container_widgets/common_divider.dart';
 
-class FooterSection extends StatelessWidget {
-  const FooterSection({super.key});
+class GwcFooter extends StatelessWidget {
+  const GwcFooter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
 
-    final disclaimerSize = isDesktop ? 11.0 : 10.0;
-    final copyrightSize = isDesktop ? 13.0 : 12.0;
+        final isDesktop = width >= 1000;
 
-    return Container(
-      color: gTapColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CommonDivider(color: borderColor, verticalMargin: 0),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 150 : 20,
-              vertical: isDesktop ? 40 : 30,
-            ),
-            child: const FooterLinks(),
-          ),
-          CommonDivider(color: borderColor),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 150 : 20,
-              vertical: isDesktop ? 40 : 20,
-            ),
-            child: Column(
-              children: [
-                Text(
-                  "GWC products are foods. They support everyday digestive comfort and nourishment, and are not intended to prevent, treat or cure any disease.",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: disclaimerSize,
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
-                    height: 1.5,
-                  ),
+        final pagePadding = (width * 0.075).clamp(20.0, 150.0);
+        final verticalPadding = (width * 0.025).clamp(20.0, 40.0);
+
+        final copyrightSize = ((width * 0.0085) * 0.80).clamp(10.0, 14.0);
+
+        return Container(
+          color: gTapColor,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CommonDivider(color: borderColor, verticalMargin: 0),
+
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: pagePadding,
+                  vertical: verticalPadding,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  "© 2026 Farmbody Private Limited • Bengaluru • FSSAI Lic. No. placeholder",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: copyrightSize,
-                    color: const Color(0xff7A7A7A),
-                    height: 1.4,
-                  ),
+                child: const FooterLinks(),
+              ),
+
+              CommonDivider(color: borderColor),
+
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: pagePadding,
+                  vertical: isDesktop ? verticalPadding : 20,
                 ),
-              ],
-            ),
+                child: Column(
+                  children: [
+                    // Text(
+                    //   "GWC products are foods. They support everyday digestive comfort and nourishment, and are not intended to prevent, treat or cure any disease.",
+                    //   textAlign: TextAlign.center,
+                    //   style: GoogleFonts.inter(
+                    //     fontSize: disclaimerSize,
+                    //     color: Colors.grey,
+                    //     fontStyle: FontStyle.italic,
+                    //     height: 1.5,
+                    //   ),
+                    // ),
+                    //
+                    // const SizedBox(height: 10),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: GoogleFonts.inter(
+                          fontSize: copyrightSize,
+                          color: const Color(0xff7A7A7A),
+                          height: 1.4,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "© ",
+                          ),
+                          TextSpan(
+                            text: "2026 Fembuddy Private Limited • Bengaluru",
+                            style: GoogleFonts.inter(
+                              fontSize: copyrightSize + 3,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xff555555),
+                            ),
+                          ),
+                          TextSpan(
+                            text: "",
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -75,48 +105,67 @@ class FooterLinks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
     final provider = context.watch<ShopProvider>();
     final categories = provider.categories;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        isDesktop
-            ? Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _LogoSection(),
-            _CategoryMenu(title: "SHOP", categories: categories),
-            _Menu(
-              title: "ABOUT",
-              items: [
-                "Terms & Conditions",
-                "Refunds & Cancellations",
-                "Contact Us",
-              ],
-            ),
-          ],
-        )
-            : Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        final isDesktop = width >= 900;
+        final sectionGap = (width * 0.06).clamp(24.0, 90.0);
+
+        if (isDesktop) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Flexible(flex: 4, child: _LogoSection()),
+
+              SizedBox(width: sectionGap),
+
+              Flexible(
+                flex: 5,
+                child: _CategoryMenu(title: "SHOP", categories: categories),
+              ),
+
+              SizedBox(width: sectionGap),
+
+              const Flexible(
+                flex: 3,
+                child: _Menu(
+                  title: "ABOUT",
+                  items: [
+                    "Terms & Conditions",
+                    "Refunds & Cancellations",
+                    "Contact Us",
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _LogoSection(),
-            const SizedBox(height: 35),
+
+            SizedBox(height: (width * 0.08).clamp(24.0, 35.0)),
+
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _CategoryMenu(
-                    title: "SHOP",
-                    categories: categories,
-                  ),
+                  child: _CategoryMenu(title: "SHOP", categories: categories),
                 ),
+
+                SizedBox(width: (width * 0.06).clamp(16.0, 30.0)),
+
                 Expanded(
                   child: _Menu(
                     title: "ABOUT",
-                    items: [
+                    items: const [
                       "Terms & Conditions",
                       "Refunds & Cancellations",
                       "Contact Us",
@@ -126,8 +175,52 @@ class FooterLinks extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ],
+        );
+      },
+    );
+  }
+}
+
+class _LogoSection extends StatelessWidget {
+  const _LogoSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        final logoHeight = (width * 0.15).clamp(44.0, 72.0);
+        final descSize = ((width * 0.04) * 0.90).clamp(12.0, 15.0);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.asset(
+              "assets/images/Gut welness logo.png",
+              height: logoHeight,
+            ),
+
+            const SizedBox(height: 18),
+
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: (width * 0.85).clamp(280.0, 360.0),
+              ),
+              child: Text(
+                "Address what is troubling your gut.\n"
+                "Maintain its natural biological rhythm.\n"
+                "Nourish it with right food choices.",
+                style: GoogleFonts.inter(
+                  fontSize: descSize,
+                  height: 1.7,
+                  color: const Color(0xff666666),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -140,85 +233,86 @@ class _CategoryMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isDesktop = width >= 900;
 
-    final titleSize = isDesktop ? 18.0 : 16.0;
-    final itemSize = isDesktop ? 16.0 : 14.0;
+        final screenWidth = MediaQuery.sizeOf(context).width;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: titleSize,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xff666666),
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 18),
-        SizedBox(
-          width: isDesktop ? 400 : double.infinity,
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: categories.map((cat) {
-              return SizedBox(
-                width: isDesktop
-                    ? 194
-                    : (MediaQuery.of(context).size.width * 0.45) - 20,
-                child: FooterMenuItem(
-                  text: cat.name ?? '',
-                  itemSize: itemSize,
-                  onTap: () async {
-                    final prefs = AppConfig().preferences;
-                    await prefs?.setString(
-                      "selectedCategory",
-                      cat.id.toString(),
-                    );
+        final titleSize =
+        ((screenWidth * 0.012) * 0.80).clamp(13.0, 18.0);
 
-                    context.go('/category/${cat.id}');
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
+        final itemSize =
+        ((screenWidth * 0.010) * 0.80).clamp(11.0, 15.0);
 
-class _LogoSection extends StatelessWidget {
-  const _LogoSection();
+        // Always keep category items in two columns.
+        final columnSpacing = (width * 0.025).clamp(12.0, 24.0);
 
-  @override
-  Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+        final itemWidth = isDesktop
+            ? ((width - columnSpacing) / 2).clamp(150.0, 240.0)
+            : ((width - columnSpacing) / 2).clamp(120.0, 220.0);
 
-    final logoHeight = isDesktop ? 60.0 : 44.0;
-    final descSize = isDesktop ? 15.0 : 13.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Image.asset("assets/images/Gut welness logo.png", height: logoHeight),
-        const SizedBox(height: 18),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 280),
-          child: Text(
-            "Address what is troubling your gut.\n"
-                "Maintain its natural biological rhythm.\n"
-                "Nourish it with 100% everyday food choices.",
-            style: GoogleFonts.inter(
-              fontSize: descSize,
-              height: 1.7,
-              color: const Color(0xff666666),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: "Avenir",
+                fontSize: titleSize,
+                fontWeight: FontWeight.w600,
+                color: gHintTextColor,
+                letterSpacing: 1,
+              ),
             ),
-          ),
-        ),
-      ],
+
+            const SizedBox(height: 18),
+
+            Wrap(
+              spacing: columnSpacing,
+              runSpacing: 12,
+              children: categories.map((cat) {
+                return SizedBox(
+                  width: itemWidth,
+                  child: FooterMenuItem(
+                    text: cat.name ?? '',
+                    itemSize: itemSize,
+                    onTap: () async {
+                      debugPrint("Clicked ${cat.id}");
+
+                      final prefs = AppConfig().preferences;
+                      await prefs?.setString("selectedCategory", cat.id.toString());
+
+                      debugPrint(
+                        "Saved selectedCategory = ${prefs?.getString("selectedCategory")}",
+                      );
+
+                      // ✅ If archived, always go to Launching screen
+                      if (cat.isArchived?.trim() == "1") {
+                        context.go('/launching');
+                        return;
+                      }
+
+                      // ✅ Food Farmacy
+                      if (cat.id == 32) {
+                        final shopProvider = context.read<ShopProvider>();
+
+                        shopProvider.changeTab(1);
+                        context.go('/');
+                        return;
+                      }
+
+                      // ✅ Other categories
+                      context.go('/category/${cat.id}');
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -228,53 +322,57 @@ enum FooterMenuType { shop, learn, about }
 class _Menu extends StatelessWidget {
   final String title;
   final List<String> items;
-  final FooterMenuType menuType;
 
-  const _Menu({
-    required this.title,
-    required this.items,
-    this.menuType = FooterMenuType.about,
-  });
+  const _Menu({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.sizeOf(context).width;
 
-    final titleSize = isDesktop ? 18.0 : 16.0;
-    final itemSize = isDesktop ? 16.0 : 14.0;
+        final titleSize =
+        ((screenWidth * 0.012) * 0.80).clamp(13.0, 18.0);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: titleSize,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xff666666),
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 18),
-        ...items.map((e) {
-          VoidCallback? onTap;
+// ABOUT text slightly increased to visually match uppercase SHOP text
+        final itemSize =
+        ((screenWidth * 0.010) * 0.88).clamp(12.0, 16.0);
 
-          if (menuType == FooterMenuType.about) {
-            onTap = () {
-              context.go('/page/${Uri.encodeComponent(e)}');
-            };
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: FooterMenuItem(
-              text: e,
-              itemSize: itemSize,
-              onTap: onTap,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: "Avenir",
+                fontSize: titleSize,
+                fontWeight: FontWeight.w600,
+                color: gHintTextColor,
+                letterSpacing: 1,
+              ),
             ),
-          );
-        }),
-      ],
+
+            const SizedBox(height: 18),
+
+            ...items.map((e) {
+              VoidCallback? onTap;
+
+              onTap = () {
+                context.go('/page/${Uri.encodeComponent(e)}');
+              };
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: FooterMenuItem(
+                  text: e,
+                  itemSize: itemSize,
+                  onTap: onTap,
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 }
@@ -317,13 +415,11 @@ class _FooterMenuItemState extends State<FooterMenuItem> {
             children: [
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 250),
-                style: GoogleFonts.inter(
+                style: TextStyle(
+                  fontFamily: "Avenir",
                   fontSize: fontSize,
-                  fontWeight:
-                  hover ? FontWeight.w700 : FontWeight.w500,
-                  color: hover
-                      ? const Color(0xffB7861A)
-                      : const Color(0xff555555),
+                  fontWeight: hover ? FontWeight.w600 : FontWeight.w500,
+                  color: hover ? gMainColor : gHintTextColor,
                   letterSpacing: 0.2,
                 ),
                 child: AnimatedScale(
@@ -337,7 +433,7 @@ class _FooterMenuItemState extends State<FooterMenuItem> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 height: 2,
-                width: hover ? 40 : 0,
+                width: hover ? (fontSize * 2.5).clamp(32.0, 48.0) : 0,
                 decoration: BoxDecoration(
                   color: const Color(0xffB7861A),
                   borderRadius: BorderRadius.circular(2),

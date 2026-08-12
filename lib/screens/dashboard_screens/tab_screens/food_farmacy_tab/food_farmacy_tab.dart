@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_sizer/flutter_sizer.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:gwc_shop/controllers/models/shop_models/category_model.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/food_farmacy_tab/widgets/explore_other_products.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/food_farmacy_tab/widgets/feature_grid.dart';
 import 'package:gwc_shop/utils/constants.dart';
 import 'package:gwc_shop/widgets/loading_widgets/loading_indicator.dart';
 import 'package:provider/provider.dart';
@@ -10,10 +12,10 @@ import 'package:provider/provider.dart';
 import '../../../../controllers/models/shop_models/get_cluster_list_model.dart';
 import '../../../../controllers/providers/shop_provider.dart';
 import '../../../../utils/responsive_helper.dart';
+import '../../../../widgets/button_widgets/button_widget.dart';
 import '../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 import '../../../category_page/category_banner.dart';
 import '../../../category_page/category_product_card.dart';
-import '../../../category_page/feature_grid.dart';
 import '../../../category_page/footer_section.dart';
 
 class FoodFarmacyTab extends StatefulWidget {
@@ -77,10 +79,10 @@ class _ConcernCardSizing {
       );
     } else if (responsive.isLaptop) {
       return const _ConcernCardSizing(
-        thumbSize: 56,
-        titleSize: 13,
-        descSize: 10.5,
-        exploreSize: 10,
+        thumbSize: 80,
+        titleSize: 18,
+        descSize: 13,
+        exploreSize: 13,
         horizontalPadding: 20,
         verticalPadding: 22,
         gapAfterThumb: 15,
@@ -89,9 +91,9 @@ class _ConcernCardSizing {
       );
     } else if (responsive.isDesktop) {
       return const _ConcernCardSizing(
-        thumbSize: 60,
-        titleSize: 14,
-        descSize: 11,
+        thumbSize: 90,
+        titleSize: 20,
+        descSize: 12,
         exploreSize: 10.5,
         horizontalPadding: 20,
         verticalPadding: 24,
@@ -101,9 +103,9 @@ class _ConcernCardSizing {
       );
     } else {
       return const _ConcernCardSizing(
-        thumbSize: 64,
-        titleSize: 15,
-        descSize: 11.5,
+        thumbSize: 100,
+        titleSize: 22,
+        descSize: 13,
         exploreSize: 11,
         horizontalPadding: 22,
         verticalPadding: 26,
@@ -118,20 +120,21 @@ class _ConcernCardSizing {
   // line-height factor, plus the "Explore >" row.
   double get mainAxisExtent =>
       verticalPadding +
-          thumbSize +
-          gapAfterThumb +
-          (titleSize * 1.25 * 2) +
-          gapAfterTitle +
-          (descSize * 1.5 * 3) +
-          gapAfterDesc +
-          (exploreSize * 1.3) +
-          verticalPadding;
+      thumbSize +
+      gapAfterThumb +
+      (titleSize * 1.25 * 2) +
+      gapAfterTitle +
+      (descSize * 1.5 * 3) +
+      gapAfterDesc +
+      (exploreSize * 1.3) +
+      verticalPadding;
 }
 
 class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
   final GlobalKey _formulationKey = GlobalKey();
   final GlobalKey _coverImageKey = GlobalKey();
   final GlobalKey _productsKey = GlobalKey();
+  final GlobalKey _exploreProductsKey = GlobalKey();
 
   int selectedIndex = 0;
   int hoveredIndex = -1;
@@ -182,6 +185,18 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
     );
   }
 
+  void _scrollToExploreProducts() {
+    final context = _exploreProductsKey.currentContext;
+    if (context == null) return;
+
+    Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+      alignment: 0.05,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
@@ -198,6 +213,16 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
 
     final showCoverSection = isValidImage(foodFarmacyCategory.coverImage);
 
+    final contentHorizontalPadding = responsive.isMobile
+        ? 20.0
+        : responsive.isTablet
+        ? 40.0
+        : responsive.isLaptop
+        ? 80.0
+        : responsive.isDesktop
+        ? 120.0
+        : 150.0;
+
     return provider.isLoading(ShopLoadingType.getClusterList)
         ? Padding(
             padding: EdgeInsets.symmetric(vertical: 50.h),
@@ -211,19 +236,36 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
               ),
               Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: responsive.isMobile ? 0 : 100),
+                  horizontal: contentHorizontalPadding,
+                ),
                 child: Column(
                   children: [
-
-                    buildIntroSection(context,foodFarmacyCategory),
+                    buildIntroSection(
+                      context,
+                      "WHAT IS YOUR GUT POINTING TO?",
+                      foodFarmacyCategory.subTextHeading ?? "",
+                      foodFarmacyCategory.subTextDescription ?? "",
+                    ),
+                    // SizedBox(height: 60),
+                    Align(alignment: Alignment.topLeft,
+                      child: ButtonWidget(
+                        text: "Explore Individual Products",
+                        onPressed: _scrollToExploreProducts,
+                        isLoading: false,
+                      ),
+                    ),
+                    SizedBox(height: 40),
                     KeyedSubtree(
                       key: _formulationKey,
-                      child: formulation(responsive,provider,foodFarmacyCategory),
+                      child: formulation(
+                        responsive,
+                        provider,
+                        foodFarmacyCategory,
+                      ),
                     ),
                   ],
                 ),
               ),
-
               SizedBox(height: 40),
               if (showCoverSection) ...[
                 Builder(
@@ -247,9 +289,23 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                   color: foodFarmacyCategory.color,
                 ),
               ],
-              SizedBox(height: 40),
+              KeyedSubtree(
+                key: _exploreProductsKey,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: contentHorizontalPadding,
+                    vertical: 60,
+                  ),
+                  child: ExploreOtherProducts(clr: foodFarmacyCategory.color),
+                ),
+              ),
               FooterSection(
                 footerThumbnail: foodFarmacyCategory.footerThumnail,
+                footerThumbnailMobile: foodFarmacyCategory.footerThumnailMobile,
+                footerThumbnailTab: foodFarmacyCategory.footerThumnailTab,
+                footerThumbnailLaptop: foodFarmacyCategory.footerThumnailLaptop,
+                footerThumbnailDesktop:
+                    foodFarmacyCategory.footerThumnailDesktop,
                 footerTitle: foodFarmacyCategory.footerTitle,
                 footerDescription: foodFarmacyCategory.footerDescription,
                 footerHighlightText: foodFarmacyCategory.footerHighlightText,
@@ -258,46 +314,61 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
           );
   }
 
-  Widget buildIntroSection(BuildContext context,CategoryList category) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
-
+  Widget buildIntroSection(
+    BuildContext context,
+    String text,
+    String title,
+    String desc,
+  ) {
     final responsive = ScreenSizeHelper(context);
 
-    // Font sizes - like FooterSection pattern
     final titleSize = responsive.isMobile
-        ? 32.0
+        ? 34.0
         : responsive.isTablet
-        ? 44.0
+        ? 46.0
         : responsive.isLaptop
-        ? 56.0
-        : 66.0;
+        ? 66.0
+        : responsive.isDesktop
+        ? 82.0
+        : responsive.isLargeDesktop
+        ? 95.0
+        : 105.0;
 
     final descSize = responsive.isMobile
         ? 14.0
         : responsive.isTablet
         ? 16.0
-        : 20;
+        : responsive.isLaptop
+        ? 18.0
+        : responsive.isDesktop
+        ? 20.0
+        : 22.0;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 60 : 20),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 30),
           Text(
-            "CHOOSE WHAT FEELS FAMILIAR",
+            text,
             style: TextStyle(
               color: gMainColor,
-              fontSize: isDesktop ? 14 : 10,
+              fontSize: responsive.isMobile ? 10 : 14,
               fontFamily: fontMedium,
               letterSpacing: 1,
             ),
           ),
-          SizedBox(height: isDesktop ? 12 : 8),
+          SizedBox(
+            height: responsive.isMobile
+                ? 8
+                : responsive.isTablet
+                ? 12
+                : 16,
+          ),
           HtmlWidget(
-            category.subTextHeading ?? '',
+            title,
             customStylesBuilder: (element) {
               if (element.localName == 'h1' ||
                   element.localName == 'h2' ||
@@ -306,103 +377,52 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                   element.localName == 'div') {
                 return {
                   'font-size': '${titleSize}px',
+                  'line-height': '0.9',
+                  'letter-spacing': '-2px',
                 };
               }
               return null;
             },
+            textStyle: TextStyle(height: 1),
           ),
-          const SizedBox(height: 8),
-          HtmlWidget(
-            category.subTextDescription ?? '',
-            customStylesBuilder: (element) {
-              if (element.localName == 'p' ||
-                  element.localName == 'span' ||
-                  element.localName == 'h1' ||
-                  element.localName == 'div') {
-                return {
-                  'font-size': '${descSize}px',
-                };
-              }
-              return null;
-            },
-          ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
-          // /// Heading
-          // RichText(
-          //   text: TextSpan(
-          //     children: [
-          //       TextSpan(
-          //         text: "Is your gut ",
-          //         style: TextStyle(
-          //           color: const Color(0xff231F20),
-          //           fontSize: isDesktop ? 50 : 20,
-          //           fontFamily: fontBold,
-          //           height: 1,
-          //         ),
-          //       ),
-          //       TextSpan(
-          //         text: "asking",
-          //         style: TextStyle(
-          //           color: const Color(0xff971B1E),
-          //           fontSize: isDesktop ? 50 : 20,
-          //           fontFamily: fontBold,
-          //           height: 1,
-          //         ),
-          //       ),
-          //       TextSpan(
-          //         text: "—\n",
-          //         style: TextStyle(
-          //           color: const Color(0xff231F20),
-          //           fontSize: isDesktop ? 50 : 20,
-          //           fontFamily: fontBold,
-          //           height: 1,
-          //         ),
-          //       ),
-          //       TextSpan(
-          //         text: "or warning you?",
-          //         style: TextStyle(
-          //           color: const Color(0xff231F20),
-          //           fontSize: isDesktop ? 50 : 20,
-          //           fontFamily: fontBold,
-          //           height: 1,
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          //
-          // SizedBox(height: isDesktop ? 10 : 10),
-          //
-          // /// Description
-          // RichText(
-          //   text: TextSpan(
-          //     style: TextStyle(
-          //       fontSize: isDesktop ? 18 : 12,
-          //       fontFamily: fontBook,
-          //       color: gBlackColor,
-          //       height: 1.6,
-          //     ),
-          //     children: const [
-          //       TextSpan(
-          //         text: "Begin with the concern, not the product.\n",
-          //         style: TextStyle(
-          //           color: gPrimaryColor,
-          //           fontWeight: FontWeight.w600,
-          //         ),
-          //       ),
-          //       TextSpan(
-          //         text:
-          //             "Each concern leads to the most relevant\nFood Farmacy formulation.",
-          //       ),
-          //     ],
-          //   ),
-          // ),
+
+          SizedBox(
+            height: responsive.isMobile
+                ? 8
+                : responsive.isTablet
+                ? 12
+                : 16,
+          ),
+          DefaultTextStyle(
+            style: const TextStyle(),
+            textAlign: TextAlign.justify,
+            child: HtmlWidget(
+              desc,
+              customStylesBuilder: (element) {
+                if (element.localName == 'p' ||
+                    element.localName == 'span' ||
+                    element.localName == 'div') {
+                  return {'font-size': '${descSize}px'};
+                }
+                return null;
+              },
+              textStyle: TextStyle(
+                height: 1.31, // Line spacing
+                letterSpacing: 1.5, // Letter spacing
+              ),
+            ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
+          ),
           SizedBox(height: 20),
         ],
       ),
     );
   }
 
- Widget formulation(ScreenSizeHelper responsive, ShopProvider provider,CategoryList category){
+  Widget formulation(
+    ScreenSizeHelper responsive,
+    ShopProvider provider,
+    CategoryList category,
+  ) {
     final cluster = provider.clusterList;
 
     // Fixed 4 columns on tablet and up, 2 on mobile — was previously
@@ -412,16 +432,27 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
 
     final cardSizing = _ConcernCardSizing.forBreakpoint(responsive);
 
-    final horizontalPadding = responsive.isMobile
-        ? 20.0
-        : responsive.isTablet
-        ? 40.0
-        : responsive.isLaptop
-        ? 60.0
-        : 60.0;
+    final title = """
+<h1 style="font-family:'Archivo Narrow'; font-weight:600;">
+  Your purposeful<br>
+  food response
+</h1>
+""";
+
+    final desc = """
+<p style="font-family:'Courier Prime'; font-weight:400; font-size:inherit;font-style:italic;text-align: justify;"">
+  <span style="color:#786f68;">
+   Based on the concern you selected,<br/>
+    these are the most relevant Food Farmacy <br/>
+    formulations for what your gut is <br/>
+    experiencing—purposefully made to <br/>
+    support this moment and gently guide <br/>
+    your gut back to rhythm.
+  </span>
+</p>
+""";
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,83 +472,94 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
               mainAxisExtent: cardSizing.mainAxisExtent,
             ),
             itemBuilder: (context, index) {
-              return buildConcernCard(cluster[index], index, cardSizing)
+              return buildConcernCard(
+                    cluster[index],
+                    index,
+                    cardSizing,
+                    category,
+                  )
                   .animate()
                   .fade(
-                delay: Duration(milliseconds: index * 80),
-                duration: 500.ms,
-              )
+                    delay: Duration(milliseconds: index * 80),
+                    duration: 500.ms,
+                  )
                   .slideY(
-                begin: .15,
-                delay: Duration(milliseconds: index * 80),
-                duration: 500.ms,
-                curve: Curves.easeOut,
-              );
+                    begin: .15,
+                    delay: Duration(milliseconds: index * 80),
+                    duration: 500.ms,
+                    curve: Curves.easeOut,
+                  );
             },
           ),
           const SizedBox(height: 20),
-          Text(
+          buildIntroSection(
+            context,
             "FOOD-FARMACY RECOMMENDATIONS",
-            style: TextStyle(
-              color: gMainColor,
-              fontSize: responsive.isMobile ? 10 : 14,
-              fontFamily: fontMedium,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
+            title,
+            desc,
           ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            "Your purposeful\nfood response",
-            style: TextStyle(
-              color: gBlackColor,
-              fontSize: responsive.isMobile
-                  ? 30
-                  : responsive.isTablet
-                  ? 40
-                  : responsive.isLaptop
-                  ? 55
-                  : 62,
-              fontFamily: fontBold,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          SizedBox(
-            width: responsive.isMobile
-                ? double.infinity
-                : responsive.isTablet
-                ? 420
-                : responsive.isLaptop
-                ? 520
-                : 580,
-            child: Text(
-              "Based on the concern you selected, these are the most relevant Food Farmacy formulations for what your gut is experiencing—purposefully made to support this moment and gently guide your gut back to rhythm.",
-              style: TextStyle(
-                color: const Color(0xff3B3B3B),
-                fontSize: responsive.isMobile
-                    ? 14
-                    : responsive.isTablet
-                    ? 16
-                    : 18,
-                fontFamily: "Courier Prime", // monospace like screenshot
-                fontWeight: FontWeight.w500,
-                height: 1.45,
-                letterSpacing: 0.15,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
+          // Text(
+          //   "FOOD-FARMACY RECOMMENDATIONS",
+          //   style: TextStyle(
+          //     color: gMainColor,
+          //     fontSize: responsive.isMobile ? 10 : 14,
+          //     fontFamily: fontMedium,
+          //     letterSpacing: 0.8,
+          //     fontWeight: FontWeight.w600,
+          //   ),
+          // ),
+          //
+          // const SizedBox(height: 6),
+          //
+          // Text(
+          //   "Your purposeful\nfood response",
+          //   style: TextStyle(
+          //     color: gBlackColor,
+          //     fontSize: responsive.isMobile
+          //         ? 30
+          //         : responsive.isTablet
+          //         ? 40
+          //         : responsive.isLaptop
+          //         ? 55
+          //         : 62,
+          //     fontFamily: fontBold,
+          //     fontWeight: FontWeight.w600,
+          //     height: 1.2,
+          //   ),
+          // ),
+          //
+          // const SizedBox(height: 14),
+          //
+          // SizedBox(
+          //   width: responsive.isMobile
+          //       ? double.infinity
+          //       : responsive.isTablet
+          //       ? 420
+          //       : responsive.isLaptop
+          //       ? 520
+          //       : 580,
+          //   child: Text(
+          //     "Based on the concern you selected, these are the most relevant Food Farmacy formulations for what your gut is experiencing—purposefully made to support this moment and gently guide your gut back to rhythm.",
+          //     style: TextStyle(
+          //       color: const Color(0xff3B3B3B),
+          //       fontSize: responsive.isMobile
+          //           ? 14
+          //           : responsive.isTablet
+          //           ? 16
+          //           : 18,
+          //       fontFamily: "Courier Prime", // monospace like screenshot
+          //       fontWeight: FontWeight.w500,
+          //       height: 1.45,
+          //       letterSpacing: 0.15,
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 20),
           KeyedSubtree(
             key: _productsKey,
             child: AdditionalProductsGrid(
               products: selectedCluster?.productsData ?? [],
-              category: category,
+              category: category.color,
             ),
           ),
           const SizedBox(height: 40),
@@ -527,13 +569,16 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
   }
 
   Widget buildConcernCard(
-      ClusterList item,
-      int index,
-      _ConcernCardSizing sizing,
-      ) {
+    ClusterList item,
+    int index,
+    _ConcernCardSizing sizing,
+    CategoryList category,
+  ) {
     final isHovered = hoveredIndex == index;
     final isSelected = selectedIndex == index;
     final active = isHovered || isSelected;
+
+    final clr = Color(0xff941d22);
 
     return TweenAnimationBuilder<double>(
       duration: const Duration(milliseconds: 250),
@@ -565,7 +610,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                 curve: Curves.easeOut,
 
                 decoration: BoxDecoration(
-                  color: active ? gsecondaryColor : gWhiteColor,
+                  color: active ? clr : gWhiteColor,
 
                   borderRadius: BorderRadius.circular(22),
 
@@ -582,7 +627,8 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                 ),
 
                 padding: EdgeInsets.symmetric(
-                  horizontal: sizing.horizontalPadding),
+                  horizontal: sizing.horizontalPadding,
+                ),
 
                 // Was MainAxisAlignment.center, which centered the whole
                 // content block vertically — but the design shows the
@@ -609,6 +655,9 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                     SizedBox(height: sizing.gapAfterThumb),
                     HtmlWidget(
                       item.clusterName ?? "",
+                      textStyle: TextStyle(
+                        color: active ? gWhiteColor : category.color,
+                      ),
                       customStylesBuilder: (element) {
                         if (element.localName == 'p' ||
                             element.localName == 'span' ||
@@ -617,7 +666,9 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                           return {
                             'font-size': '${sizing.titleSize}px',
                             'text-align': 'center',
-                            'color': active ? '#FFFFFF' : '#355C4A', // or your hex color
+                            'color': active
+                                ? '#FFFFFF'
+                                : '#355C4A', // or your hex color
                             'margin': '0',
                             'padding': '0',
                           };
@@ -625,6 +676,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                         return null;
                       },
                     ),
+
                     // Text(
                     //   (item.clusterName ?? '').toUpperCase(),
                     //   textAlign: TextAlign.center,
@@ -638,7 +690,6 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                     //     color: active ? gWhiteColor : gsecondaryColor,
                     //   ),
                     // ),
-
                     SizedBox(height: sizing.gapAfterTitle),
 
                     Text(
@@ -650,7 +701,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                         fontFamily: fontBook,
                         fontSize: sizing.descSize,
                         height: 1.4,
-                        color: active ? gWhiteColor : gsecondaryColor,
+                        color: active ? gWhiteColor : category.color,
                       ),
                     ),
 
@@ -687,468 +738,3 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter_animate/flutter_animate.dart';
-// import 'package:google_fonts/google_fonts.dart';
-//
-// import '../../../../utils/constants.dart';
-// import '../../../../utils/responsive_helper.dart';
-// import '../shop_tab/widgets/clock_section/clock_top_slider.dart';
-// import '../shop_tab/widgets/clock_section/clock_vertical_slider.dart';
-//
-// class FoodFarmacyTab extends StatefulWidget {
-//   const FoodFarmacyTab({super.key});
-//
-//   @override
-//   State<FoodFarmacyTab> createState() => _FoodFarmacyTabState();
-// }
-//
-// class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
-//
-//   int selected = 0;
-//   @override
-//   Widget build(BuildContext context) {
-//     final isDesktop = ResponsiveHelper(context).isDesktop;
-//
-//     return Padding(
-//       padding: EdgeInsets.symmetric(
-//         horizontal: isDesktop ? 150 : 20,
-//         vertical: isDesktop ? 40 : 30,
-//       ),
-//       child: Column(
-//         children: [
-//           isDesktop
-//               ? Row(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Expanded(flex: 4, child: leftSection()),
-//                     SizedBox(width: 20),
-//                     Expanded(flex: 6, child: GutClockTopSlider()),
-//                   ],
-//                 )
-//               : Column(
-//                   children: [
-//                     leftSection(),
-//                     SizedBox(height: 30),
-//                     GutClockTopSlider(),
-//                   ],
-//                 ),
-//           SizedBox(height: 20),
-//           _timeline(),
-//           const SizedBox(height: 10),
-//           AnimatedSwitcher(
-//             duration: const Duration(milliseconds: 500),
-//             switchInCurve: Curves.easeOut,
-//             switchOutCurve: Curves.easeIn,
-//             child: selected < 3
-//                 ? Row(
-//               key: const ValueKey("leftLayout"),
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 /// LEFT CONTENT
-//                 Expanded(
-//                   flex: 7,
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       _story(selected),
-//                       const SizedBox(height: 40),
-//                       _button(),
-//                     ],
-//                   ),
-//                 ),
-//                 const SizedBox(width: 20),
-//
-//                 /// RIGHT PRODUCTS
-//                 const Expanded(flex: 2, child: GutClockVerticalSlider()),
-//               ],
-//             )
-//                 : Row(
-//               key: const ValueKey("rightLayout"),
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 /// LEFT PRODUCTS
-//                 const Expanded(flex: 2, child: GutClockVerticalSlider()),
-//                 const SizedBox(width: 40),
-//
-//                 /// RIGHT CONTENT
-//                 Expanded(
-//                   flex: 7,
-//                   child: Center(
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         _story(selected),
-//                         const SizedBox(height: 40),
-//                         _button(),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget leftSection() {
-//     return Column(
-//       children: [
-//         Row(
-//           children: [
-//             Expanded(
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     "Gut out of\nRhythm?",
-//                     style: GoogleFonts.inter(
-//                       fontSize: 56,
-//                       fontWeight: FontWeight.w700,
-//                       height: .95,
-//                       color: const Color(0xff231F20),
-//                     ),
-//                   ),
-//
-//                   const SizedBox(height: 8),
-//                   Transform.rotate(
-//                     angle: -.08,
-//                     child: Text(
-//                       "Meet Food Farmacy",
-//                       style: GoogleFonts.caveat(
-//                         color: const Color(0xffB7861A),
-//                         fontSize: 34,
-//                         fontWeight: FontWeight.w700,
-//                       ),
-//                     ),
-//                   ).animate(delay: 400.ms).fade().slideY(begin: .4),
-//                 ],
-//               ),
-//             ),
-//
-//             Image.asset("assets/images/food_farmacy_arrow.png", width: 90)
-//                 .animate(onPlay: (c) => c.repeat(reverse: true))
-//                 .moveX(begin: 0, end: 6, duration: 1200.ms),
-//           ],
-//         ),
-//         const SizedBox(height: 20),
-//
-//         Text(
-//           "The everyday idea of food as medicine.\n"
-//           "Food Farmacy brings targeted formulations "
-//           "for gas, bloating, acidity, burping, "
-//           "constipation and poor digestion using "
-//           "familiar, time-tested ingredients in the "
-//           "right form and dose for the moment your "
-//           "gut needs support.\n"
-//           "Right food. Right concern. "
-//           "A gentler way back to rhythm.",
-//           style: GoogleFonts.ibmPlexMono(
-//             fontSize: 13,
-//             height: 1.55,
-//             color: Colors.grey.shade700,
-//           ),
-//         ).animate().fade(delay: 300.ms).slideY(begin: .15),
-//       ],
-//     );
-//   }
-//
-//   Widget _timeline() {
-//     final icons = [
-//       Icons.no_meals_rounded,
-//       Icons.local_fire_department_outlined,
-//       Icons.sync_alt_rounded,
-//       Icons.air_rounded,
-//       Icons.bubble_chart_outlined,
-//       Icons.record_voice_over_outlined,
-//     ];
-//
-//     final foods = [
-//       "POOR\nDIGESTION",
-//       "ACIDITY",
-//       "CONSTIPATION",
-//       "GAS",
-//       "BLOATING",
-//       "BURPING",
-//     ];
-//
-//     // final questions = [
-//     //   "Food feels heavy after eating?",
-//     //   "Burning sensation after meals?",
-//     //   "Not passing stools regularly?",
-//     //   "Gas after every meal?",
-//     //   "Feeling bloated after eating?",
-//     //   "Frequent burping throughout the day?",
-//     // ];
-//
-//     return LayoutBuilder(
-//       builder: (context, constraints) {
-//         final itemWidth = constraints.maxWidth / icons.length;
-//
-//         return Column(
-//           children: [
-//             /// ICONS + TIME
-//             SizedBox(
-//               height: 40,
-//               child: Row(
-//                 children: List.generate(
-//                   icons.length,
-//                       (index) {
-//                     final active = selected == index;
-//
-//                     return Expanded(
-//                       child: InkWell(
-//                         splashColor: Colors.transparent,
-//                         highlightColor: Colors.transparent,
-//                         onTap: () {
-//                           setState(() {
-//                             selected = index;
-//                           });
-//                         },
-//                         child: AnimatedContainer(
-//                           duration: const Duration(milliseconds: 250),
-//                           padding: const EdgeInsets.symmetric(vertical: 4),
-//                           decoration: BoxDecoration(
-//                             color: active
-//                                 ? Colors.grey.shade100
-//                                 : Colors.transparent,
-//                             borderRadius: BorderRadius.circular(10),
-//                           ),
-//                           child: Column(
-//                             mainAxisAlignment: MainAxisAlignment.center,
-//                             children: [
-//                               AnimatedScale(
-//                                 duration: const Duration(milliseconds: 250),
-//                                 scale: active ? 1.08 : 1,
-//                                 child: Icon(
-//                                   icons[index],
-//                                   size: active ? 24 : 22,
-//                                   color: const Color(0xffD89C00),
-//                                 ),
-//                               ),
-//
-//                               const SizedBox(height: 4),
-//                             ],
-//                           ),
-//                         ),
-//                       ),
-//                     );
-//                   },
-//                 ),
-//               ),
-//             ),
-//
-//
-//             /// TIMELINE
-//             SizedBox(
-//               height: 20,
-//               child: Stack(
-//                 children: [
-//                   Positioned(
-//                     left: itemWidth / 2,
-//                     right: itemWidth / 2,
-//                     top: 9,
-//                     child: Container(
-//                       height: 2,
-//                       color: Colors.grey.shade300,
-//                     ),
-//                   ),
-//
-//                   Row(
-//                     children: List.generate(
-//                       icons.length,
-//                           (index) {
-//                         return Expanded(
-//                           child: Center(
-//                             child: Container(
-//                               width: 9,
-//                               height: 9,
-//                               decoration: BoxDecoration(
-//                                 color: Colors.white,
-//                                 border: Border.all(
-//                                   color: Colors.grey.shade400,
-//                                 ),
-//                                 shape: BoxShape.circle,
-//                               ),
-//                             ),
-//                           ),
-//                         );
-//                       },
-//                     ),
-//                   ),
-//
-//                   AnimatedPositioned(
-//                     duration: const Duration(milliseconds: 300),
-//                     curve: Curves.easeOut,
-//                     left: (itemWidth * selected) +
-//                         itemWidth / 2 -
-//                         5,
-//                     top: 4,
-//                     child: Container(
-//                       width: 10,
-//                       height: 10,
-//                       decoration: BoxDecoration(
-//                         color: const Color(0xffD89C00),
-//                         border: Border.all(
-//                           color: Colors.white,
-//                           width: 2,
-//                         ),
-//                         shape: BoxShape.circle,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//
-//             const SizedBox(height: 10),
-//             /// FOOD NAMES
-//             Row(
-//               children: List.generate(
-//                 foods.length,
-//                     (index) {
-//                   final active = selected == index;
-//
-//                   return Expanded(
-//                     child: AnimatedDefaultTextStyle(
-//                       duration: const Duration(milliseconds: 250),
-//                       style: TextStyle(
-//                         fontFamily: active ? fontBold : fontMedium,
-//                         fontSize: 11,
-//                         color: active
-//                             ? const Color(0xffD89C00)
-//                             : Colors.grey.shade700,
-//                       ),
-//                       child: Text(
-//                         foods[index],
-//                         textAlign: TextAlign.center,
-//                       ),
-//                     ),
-//                   );
-//                 },
-//               ),
-//             ),
-//
-//             const SizedBox(height: 8),
-//
-//             /// MOVING ARROW
-//             SizedBox(
-//               height: 70,
-//               child: Stack(
-//                 children: [
-//                   AnimatedPositioned(
-//                     duration: const Duration(milliseconds: 350),
-//                     curve: Curves.easeOut,
-//                     left: (itemWidth * selected) +
-//                         (itemWidth / 2) -
-//                         18,
-//                     child: Image.asset(
-//                       "assets/images/tab_arrow.png",
-//                       height: 70,
-//                       fit: BoxFit.contain,
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-//
-//   final titles = [
-//     "Dear you,",
-//     "Good Morning,",
-//     "Stay Fresh,",
-//     "Lunch Time,",
-//     "Tea Time,",
-//     "Relax,",
-//   ];
-//
-//   final subtitles = [
-//     "Begin gently. Let the rest of the day build better.",
-//     "Fuel your morning with nourishment.",
-//     "Keep your energy steady.",
-//     "Give your gut something comforting.",
-//     "A light pause makes a better evening.",
-//     "End your day with warmth.",
-//   ];
-//
-//   Widget _story(int index) {
-//     return AnimatedSwitcher(
-//       duration: const Duration(milliseconds: 400),
-//
-//       child: Column(
-//         key: ValueKey(index),
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Text(
-//             titles[index],
-//             style: GoogleFonts.caveat(
-//               fontSize: 34,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//
-//           const SizedBox(height: 18),
-//
-//           Text(
-//             "A steadier day can begin with something gentle.\n"
-//                 "Ambali brings fermented millet nourishment in a\n"
-//                 "light, sippable form helping you begin well.\n\n"
-//                 "Every moment has the right food.\n"
-//                 "Give your gut what it needs.",
-//             style: GoogleFonts.caveat(fontSize: 27, height: 1.6),
-//           ),
-//
-//           const SizedBox(height: 24),
-//
-//           Text(
-//             subtitles[index],
-//             style: GoogleFonts.caveat(
-//               color: const Color(0xffD89C00),
-//               fontSize: 25,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _button() {
-//     return MouseRegion(
-//       cursor: SystemMouseCursors.click,
-//       child: AnimatedContainer(
-//         duration: const Duration(milliseconds: 250),
-//         width: 240,
-//         height: 56,
-//         decoration: BoxDecoration(
-//           color: const Color(0xff9A1A1F),
-//           borderRadius: BorderRadius.circular(50),
-//         ),
-//         child: Row(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Text(
-//               "Begin My Morning",
-//               style: GoogleFonts.inter(
-//                 color: Colors.white,
-//                 fontWeight: FontWeight.w600,
-//               ),
-//             ),
-//
-//             const SizedBox(width: 18),
-//
-//             const Icon(Icons.arrow_forward, color: Colors.white),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

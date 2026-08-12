@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -11,11 +12,12 @@ class MobileDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menus = [
-      "Shop",
-      "Food Farmacy",
-      "Everyday Gut Products",
-      "Learn",
-      "Our Story",
+      "All Products",
+      "Shop Food Farmacy",
+      "Learn"
+      // "Shop Gut Rhythm Products",
+      // "Learn",
+      // "Our Story",
     ];
 
     return Drawer(
@@ -45,18 +47,22 @@ class MobileDrawer extends StatelessWidget {
                     color: selected ? gPrimaryColor : Colors.grey,
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close drawer
-
                     final shopProvider = context.read<ShopProvider>();
+                    final isSameTab = shopProvider.selectedTab == index;
 
-                    final isSameTab =
-                        shopProvider.selectedTab == index;
+                    Navigator.of(context).pop();
 
-                    shopProvider.changeTab(index);
-
-                    if (isSameTab) {
-                      shopProvider.onTabReClicked(index);
+                    if (GoRouterState.of(context).uri.path != "/") {
+                      context.go("/");
                     }
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      shopProvider.changeTab(index);
+
+                      if (isSameTab) {
+                        shopProvider.onTabReClicked(index);
+                      }
+                    });
                   },
                 );
               },

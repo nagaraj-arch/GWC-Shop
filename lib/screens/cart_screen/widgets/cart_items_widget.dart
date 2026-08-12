@@ -19,7 +19,8 @@ class CartItemsWidget extends StatefulWidget {
   State<CartItemsWidget> createState() => _CartItemsWidgetState();
 }
 
-class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProviderStateMixin {
+class _CartItemsWidgetState extends State<CartItemsWidget>
+    with SingleTickerProviderStateMixin {
   AnimationController? bounceController;
   Animation<double>? bounceAnimation;
 
@@ -34,18 +35,24 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
 
     bounceAnimation = TweenSequence([
       TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 1.35)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween(
+          begin: 1.0,
+          end: 1.35,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.35, end: 0.9)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween(
+          begin: 1.35,
+          end: 0.9,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 30,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 0.9, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
+        tween: Tween(
+          begin: 0.9,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 20,
       ),
     ]).animate(bounceController!);
@@ -71,7 +78,8 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
             final item = cart.items[index];
             int quantity = item.quantity;
 
-            final hasFlavor = (item.flavorName ?? "").trim().isNotEmpty &&
+            final hasFlavor =
+                (item.flavorName ?? "").trim().isNotEmpty &&
                 item.flavorName != "null";
 
             debugPrint("Flavors : ${item.flavorName}");
@@ -100,10 +108,10 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                       children: [
                         Text(
                           item.name ?? '',
-                          style: GoogleFonts.cormorantGaramond(
-                            fontSize: fontSize16,
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
+                          style: TextStyle(
+                            fontFamily: "Caveat",
+                            fontSize: fontSize18,
+                            fontWeight: FontWeight.w700,
                             color: gPrimaryColor,
                           ),
                         ),
@@ -153,7 +161,9 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                           backgroundColor: const Color(0xffEEFDF4),
                           borderClr: const Color(0xff77D4A5),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           margin: EdgeInsets.zero,
                           borderRadius: 6,
                           child: RichText(
@@ -162,20 +172,22 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                                 TextSpan(
                                   text: "₹${item.price?.toStringAsFixed(0)}",
                                   style: TextStyle(
-                                    fontSize: fontSize10,
-                                    fontFamily: fontBold,
+                                    fontSize: fontSize13,
+                                    fontFamily: "Caveat",
                                     color: gPrimaryColor,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 if ((item.flavorName ?? "").trim().isNotEmpty &&
                                     item.flavorName != "null")
                                   TextSpan(
                                     text:
-                                    " (+₹${(item.flavorPrice ?? 0).toStringAsFixed(0)})",
+                                        " (+₹${(item.flavorPrice ?? 0).toStringAsFixed(0)})",
                                     style: TextStyle(
-                                      fontSize: fontSize08,
-                                      fontFamily: fontMedium,
+                                      fontSize: fontSize11,
+                                      fontFamily: "Caveat",
                                       color: Colors.green,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                               ],
@@ -230,12 +242,12 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                   // ),
 
                   // SizedBox(width: 1.w),
-
                   Card(
                     color: gBgColor,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Row(
@@ -245,13 +257,23 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                             onTap: () async {
                               if (quantity == 1) {
                                 final remove = await showDeleteConfirmation(
-                                    context, item.name ?? '');
+                                  context,
+                                  item.name ?? '',
+                                );
 
                                 if (remove == true) {
-                                  cart.removeItem(context,item.id, item.flavorName);
+                                  cart.removeItem(
+                                    context,
+                                    item.id,
+                                    item.flavorName,
+                                  );
                                 }
                               } else {
-                                cart.removeItem(context,item.id, item.flavorName);
+                                cart.removeItem(
+                                  context,
+                                  item.id,
+                                  item.flavorName,
+                                );
                               }
 
                               bounceController?.forward().then((_) {
@@ -261,7 +283,8 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                           ),
                           SizedBox(width: isDesktop ? 0.8.w : 1.5.w),
                           AnimatedBuilder(
-                            animation: bounceAnimation ??
+                            animation:
+                                bounceAnimation ??
                                 const AlwaysStoppedAnimation(1),
                             builder: (context, child) {
                               final scale = bounceAnimation?.value ?? 1.0;
@@ -284,7 +307,7 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                           _qtyBtn(
                             icon: Icons.add,
                             onTap: () {
-                              cart.addItem(context,item);
+                              cart.addItem(context, item);
 
                               bounceController?.forward().then((_) {
                                 bounceController?.reverse();
@@ -305,17 +328,19 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                         "Total",
                         style: TextStyle(
                           color: newLightGreyColor,
-                          fontSize: fontSize10,
-                          fontFamily: fontBook,
+                          fontSize: fontSize12,
+                          fontFamily: "Caveat",
+                          fontWeight: FontWeight.w400
                         ),
                       ),
                       SizedBox(height: .5.h),
                       Text(
                         "₹${((item.price! + (item.flavorPrice ?? 0)) * item.quantity).toStringAsFixed(0)}",
                         style: TextStyle(
-                          fontSize: fontSize13,
-                          fontFamily: fontBold,
+                          fontSize: fontSize15,
+                          fontFamily: "Caveat",
                           color: gPrimaryColor,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -353,7 +378,9 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
   }
 
   Future<bool?> showDeleteConfirmation(
-      BuildContext context, String productName) {
+    BuildContext context,
+    String productName,
+  ) {
     final isDesktop = ResponsiveHelper(context).isDesktop;
 
     return showGeneralDialog<bool>(
@@ -376,7 +403,7 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                   blurRadius: 30,
                   color: Colors.black26,
                   offset: Offset(0, 10),
-                )
+                ),
               ],
             ),
             child: Padding(
@@ -390,10 +417,7 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.red.shade50,
-                          Colors.red.shade100,
-                        ],
+                        colors: [Colors.red.shade50, Colors.red.shade100],
                       ),
                     ),
                     child: Icon(
@@ -427,10 +451,7 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
                   Text(
                     "This item will be removed from your cart.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 28),
                   Row(
@@ -479,19 +500,14 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
       transitionBuilder: (_, animation, __, child) {
         if (!isDesktop) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              ),
-            ),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+            child: FadeTransition(opacity: animation, child: child),
           );
         }
 
@@ -499,10 +515,7 @@ class _CartItemsWidgetState extends State<CartItemsWidget> with SingleTickerProv
           opacity: animation,
           child: ScaleTransition(
             scale: Tween(begin: .85, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutBack,
-              ),
+              CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
             ),
             child: child,
           ),

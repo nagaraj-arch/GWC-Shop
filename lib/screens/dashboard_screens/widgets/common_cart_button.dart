@@ -70,6 +70,27 @@ class _CommonCartButtonState extends State<CommonCartButton> {
   }
 
   Widget _addButton(CartProvider cartManager, ScreenSizeHelper responsive) {
+    if(widget.product.hasFlavours == "1"){
+      return Container(
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: const Color(0xffEEEAD7),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        alignment: Alignment.center,
+        child: Center(
+          child: Text(
+              "LAUNCHING SOON",
+              style: GoogleFonts.robotoCondensed(
+                fontSize: fontSize10,
+                fontWeight: FontWeight.w700,
+                color: gBlackColor,
+              )
+          ),
+        ),
+
+    );
+    }
     return InkWell(
       onTap: () {
         cartManager.addItem(
@@ -100,7 +121,7 @@ class _CommonCartButtonState extends State<CommonCartButton> {
           child: Text(
             "ADD TO CART",
               style: GoogleFonts.robotoCondensed(
-                fontSize: 14,
+                fontSize: fontSize10,
                 fontWeight: FontWeight.w700,
                 color: gBlackColor,
               )
@@ -146,7 +167,7 @@ class _CommonCartButtonState extends State<CommonCartButton> {
                 "$quantity",
                 key: ValueKey(quantity),
                   style: GoogleFonts.robotoCondensed(
-                    fontSize: 14,
+                    fontSize: fontSize10,
                     fontWeight: FontWeight.w700,
                     color: gBlackColor,
                   )

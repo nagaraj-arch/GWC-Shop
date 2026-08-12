@@ -138,16 +138,18 @@ class CustomTextField extends StatelessWidget {
         onFieldSubmitted: onFieldSubmitted,
         inputFormatters: inputFormatters,
         style: TextStyle(
-          fontFamily: fontMedium,
+          fontFamily: "Courier Prime",
           fontSize: fontSize12,
           color: textColor,
+          fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            fontFamily: fontBook,
+            fontFamily: "Courier Prime",
             color: newLightGreyColor,
             fontSize: fontSize10,
+            fontWeight: FontWeight.w400,
           ),
           filled: true,
           fillColor: effectiveFillColor,

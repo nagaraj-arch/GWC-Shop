@@ -36,22 +36,20 @@ class FeatureGrid extends StatelessWidget {
     late final double horizontalPadding;
 
     if (responsive.isMobile) {
-      // 1 column on mobile — the single card fills (most of) the phone
-      // width rather than being capped to a multi-column value.
       maxCardWidth = double.infinity;
       horizontalPadding = 16;
     } else if (responsive.isTablet) {
-      maxCardWidth = 300;
+      maxCardWidth = 280;
       horizontalPadding = 24;
     } else if (responsive.isLaptop) {
-      maxCardWidth = 380;
+      maxCardWidth = 340;
       horizontalPadding = 40;
     } else if (responsive.isDesktop) {
-      maxCardWidth = 420;
+      maxCardWidth = 370;
       horizontalPadding = 50;
     } else {
-      // largeDesktop / ultra-wide
-      maxCardWidth = 460;
+      // Smaller tiles on large and ultra-wide screens
+      maxCardWidth = 400;
       horizontalPadding = 60;
     }
 
@@ -64,7 +62,7 @@ class FeatureGrid extends StatelessWidget {
     final maxGridWidth = responsive.isMobile
         ? double.infinity
         : (maxCardWidth * crossAxisCount) +
-        (gridSpacing * (crossAxisCount - 1));
+              (gridSpacing * (crossAxisCount - 1));
 
     return Center(
       child: ConstrainedBox(
@@ -76,9 +74,10 @@ class FeatureGrid extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final totalSpacing = gridSpacing * (crossAxisCount - 1);
-            final cardWidth = (constraints.maxWidth -
-                totalSpacing -
-                (horizontalPadding * 2)) /
+            final cardWidth =
+                (constraints.maxWidth -
+                    totalSpacing -
+                    (horizontalPadding * 2)) /
                 crossAxisCount;
 
             // Landscape, but milder than a previous 1.35 attempt — at
@@ -150,7 +149,8 @@ class _FeatureCard extends StatelessWidget {
     // large a share of the available vertical space, leaving no room
     // for anything below it.
     final avatarSize = cardWidth * 0.30;
-    final titleSize = (cardWidth * 0.055) < 13.0 ? 13.0 : cardWidth * 0.055;
+    final titleSize =
+    (cardWidth * 0.045) < 10.0 ? 10.0 : cardWidth * 0.045;
     final descSize = (cardWidth * 0.050) < 11.0 ? 11.0 : cardWidth * 0.050;
     final indexSize = cardWidth * 0.045;
 
@@ -163,10 +163,10 @@ class _FeatureCard extends StatelessWidget {
         Container(
           margin: EdgeInsets.only(top: avatarSize / 2),
           padding: EdgeInsets.only(
-           left: cardWidth * 0.08,
+            left: cardWidth * 0.08,
             // avatarSize / 2 + 12,
-          right:  cardWidth * 0.08,
-           bottom:  cardWidth * 0.08,
+            right: cardWidth * 0.08,
+            // bottom: cardWidth * 0.08,
           ),
           decoration: BoxDecoration(
             color: cardColor,
@@ -200,7 +200,7 @@ class _FeatureCard extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: cardWidth * 0.15),
+              SizedBox(height: cardWidth * 0.12),
 
               // Title
               Text(
@@ -223,11 +223,7 @@ class _FeatureCard extends StatelessWidget {
 
               SizedBox(height: cardWidth * 0.03),
 
-              Container(
-                width: cardWidth * 0.18,
-                height: 2,
-                color: gMainColor,
-              ),
+              Container(width: cardWidth * 0.18, height: 2, color: gMainColor),
 
               SizedBox(height: cardWidth * 0.04),
 
@@ -235,18 +231,22 @@ class _FeatureCard extends StatelessWidget {
               // genuinely landscape (shorter) card has less vertical
               // room than the previous portrait shape did.
               Expanded(
-                child: Text(
-                  item?.description ?? "",
-                  textAlign: TextAlign.left,
-                  // maxLines: 3,
-                  // overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: "Avenir",
-                    fontWeight: FontWeight.w500,
-                    fontSize: descSize,
-                    color: const Color(0xffF5EDE6),
-                    letterSpacing: 0.0,
-                    height: 1.31,
+                child: DefaultTextStyle(
+                  style: const TextStyle(),
+                  textAlign: TextAlign.justify,
+                  child: Text(
+                    item?.description ?? "",
+                    textAlign: TextAlign.left,
+                    // maxLines: 3,
+                    // overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: "Avenir",
+                      fontWeight: FontWeight.w500,
+                      fontSize: descSize,
+                      color: const Color(0xffF5EDE6),
+                      letterSpacing: 0.0,
+                      height: 1.31,
+                    ),
                   ),
                 ),
               ),

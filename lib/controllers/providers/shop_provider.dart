@@ -97,6 +97,13 @@ class ShopProvider extends ChangeNotifier {
             .where((item) => item.hasAdditional == true)
             .toList();
 
+        categories.sort((a, b) {
+          final orderA = int.tryParse(a.orderBy ?? '') ?? 999;
+          final orderB = int.tryParse(b.orderBy ?? '') ?? 999;
+
+          return orderA.compareTo(orderB);
+        });
+
         debugPrint("All Categories: $allCategories");
         debugPrint("Categories: $categories");
         notifyListeners();

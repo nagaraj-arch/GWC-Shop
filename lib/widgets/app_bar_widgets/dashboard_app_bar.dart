@@ -1,7 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:gwc_shop/utils/common_utils.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/providers/products_providers.dart';
@@ -14,7 +13,9 @@ import '../button_widgets/icon_button.dart';
 import '../text_field_widgets/common_search_bar.dart';
 
 class DashboardAppBar extends StatefulWidget {
-  const DashboardAppBar({super.key});
+  final ScrollController? scrollController;
+
+  const DashboardAppBar({super.key, this.scrollController});
 
   @override
   State<DashboardAppBar> createState() => _DashboardAppBarState();
@@ -24,13 +25,13 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
   int hoverIndex = -1;
   bool showSearch = false;
 
-  final TextEditingController searchController = TextEditingController();
-
   final menus = [
-    "Home",
+    // "Home",
+    "All Products",
     "Shop Food Farmacy",
-    "Shop Gut Rhythm Products",
-    "Our Story",
+    "Learn"
+    // "Shop Gut Rhythm Products",
+    // "Our Story",
   ];
 
   @override
@@ -73,13 +74,22 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
       onTap: () {
         final shopProvider = context.read<ShopProvider>();
 
-        // Change to tab 1
-        shopProvider.changeTab(0);
+        // Already in Home tab
+        if (shopProvider.selectedTab == 0 &&
+            GoRouterState.of(context).uri.path == "/") {
+          widget.scrollController?.animateTo(
+            0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOut,
+          );
+          return;
+        }
 
-        // Navigate to home first
+        // Navigate to Home
+        shopProvider.changeTab(0);
         context.go("/");
       },
-      child: Image.asset("assets/images/Gut welness logo.png", height: 55),
+      child: Image.asset("assets/images/Gut welness logo.png", height: 40),
     );
   }
 
@@ -160,70 +170,89 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
   }
 
   Widget buildActionButtons({double searchWidth = 240}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-          width: showSearch ? searchWidth : 35,
-          height: 42,
-          child: Row(
-            children: [
-              if (showSearch)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8, top: 3),
-                    child: searchWidget(),
-                  ),
-                ),
+    final shopProvider = context.watch<ShopProvider>();
 
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                transitionBuilder: (child, animation) => RotationTransition(
-                  turns: animation,
-                  child: FadeTransition(opacity: animation, child: child),
-                ),
-                child: showSearch
-                    ? IconButtonWidget(
+    return Consumer<ProductsProvider>(
+      builder: (context, productProvider, _) {
+        final isSearchOpen = productProvider.isSearchOpen;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (shopProvider.selectedTab == 0)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+                width: isSearchOpen ? searchWidth : 42,
+                height: 42,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isSearchOpen)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            right: 8,
+                            top: 3,
+                          ),
+                          child: searchWidget(),
+                        ),
+                      ),
+
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) {
+                        return RotationTransition(
+                          turns: animation,
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: isSearchOpen
+                          ? IconButtonWidget(
+                        key: const ValueKey("close"),
                         msg: "Close Search",
                         icon: Icons.close,
                         onTap: () {
-                          setState(() {
-                            showSearch = false;
-                            searchController.clear();
-                          });
+                          productProvider.closeSearch();
                         },
                       )
-                    : IconButtonWidget(
+                          : IconButtonWidget(
+                        key: const ValueKey("search"),
                         msg: "Search",
                         icon: Icons.search,
                         onTap: () {
-                          setState(() {
-                            showSearch = true;
-                          });
+                          productProvider.openSearch();
                         },
                       ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        FloatingButtonWidget(),
-        const SizedBox(width: 10),
-        const CartIconWidget(),
-      ],
+
+            const SizedBox(width: 10),
+
+            FloatingButtonWidget(),
+
+            const SizedBox(width: 10),
+
+            const CartIconWidget(),
+          ],
+        );
+      },
     );
   }
 
   Widget searchWidget() {
     return Consumer<ProductsProvider>(
-      builder: (_, provider, _) {
+      builder: (_, provider, __) {
         return CommonSearchBar(
           controller: provider.searchController,
           hintText: "Search products...",
-          onChanged: (v) {
-            provider.search(v);
+          onChanged: (value) {
+            provider.search(value);
           },
           borderColor: gHintTextColor,
           width: ResponsiveHelper(context).isDesktop ? 20 : double.maxFinite,
@@ -240,16 +269,21 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
       color: Colors.white,
       child: Row(
         children: [
+          Builder(
+            builder: (drawerContext) {
+              return GestureDetector(
+                onTap: () {
+                  Scaffold.of(drawerContext).openDrawer();
+                },
+                child: const Icon(Icons.menu),
+              );
+            },
+          ),
+
+          const SizedBox(width: 16),
           _logo(),
           const Spacer(),
           buildActionButtons(),
-          const SizedBox(width: 16),
-          Builder(
-            builder: (context) => GestureDetector(
-              onTap: () => Scaffold.of(context).openEndDrawer(),
-              child: const Icon(Icons.menu),
-            ),
-          ),
         ],
       ),
     );

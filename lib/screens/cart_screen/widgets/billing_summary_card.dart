@@ -140,7 +140,7 @@ class _BillingSummaryCardState extends State<BillingSummaryCard> {
             ),
             if (isShow)
               Text(
-                "(Free Delivery above ₹499)",
+                "(Free Delivery above ₹799)",
                 style: TextStyle(
                   fontSize: 10.dp,
                   height: 1,

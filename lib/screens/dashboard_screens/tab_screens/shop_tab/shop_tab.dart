@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/clock_section/gut_clock_section.dart';
-import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/difference_section/difference_section.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/food_farmacy_timeline/food_farmacy_timeline.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/rhythm_widget/gut_clock_widget.dart';
 import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/rhythm_widget/rhythm_widget.dart';
-
-import '../../../../utils/responsive_helper.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/shop_tab/widgets/timeline_section/timeline_section.dart';
+import 'package:gwc_shop/utils/constants.dart';
+import 'package:gwc_shop/utils/responsive_helper.dart';
 
 class ShopTab extends StatefulWidget {
   const ShopTab({super.key});
@@ -15,23 +16,63 @@ class ShopTab extends StatefulWidget {
 class _ShopTabState extends State<ShopTab> {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    final helper = ScreenSizeHelper(context);
+    final screenWidth = helper.screenWidth;
+    late final double bannerHeight;
+    if (helper.isMobile) {
+      bannerHeight = screenWidth * 0.50;
+    } else if (helper.isTablet) {
+      bannerHeight = screenWidth * 0.50;
+    } else if (helper.isLaptop) {
+      bannerHeight = screenWidth * 0.50;
+    } else if (helper.isDesktop) {
+      bannerHeight = screenWidth * 0.45;
+    } else {
+      bannerHeight = screenWidth * 0.45;
+    }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 120 : 25,
-        // vertical: isDesktop ? 40 : 30,
-      ),
-      child: Column(
-        children: [
-          RhythmWidget(),
-          SizedBox(height: 40),
-          GutClockSection(),
-          SizedBox(height: 40),
-          DifferenceSection(),
-          SizedBox(height: 40),
-        ],
-      ),
+    return Column(
+      children: [
+        // SizedBox(
+        //   width: double.infinity,
+        //   height: bannerHeight,
+        //   child: ThumbnailView(
+        //     context: context,
+        //     imageUrl: 'https://gutandhealth.com/storage/uploads/ingredient_category_images/home_banner_top.webp',
+        //     enablePreview: false,
+        //     borderRadius: 0,
+        //     width: double.infinity,
+        //     height: bannerHeight,
+        //     fit: BoxFit.fill,
+        //   ),
+        // ),
+        RhythmWidget(),
+        Container(
+          color: gPrimaryColor.withOpacity(0.03),
+          padding: EdgeInsets.symmetric(
+            horizontal: (helper.isMobile || helper.isTablet) ? 15 : 120,
+          ),
+          child: Column(
+            children: [
+
+              SizedBox(height: 60),
+              GutClockWidget(),
+              TimelineSection(),
+              SizedBox(height: 40),
+
+            ],
+          ),
+        ),
+        Container(
+          color: gPrimaryColor.withOpacity(0.1),
+          padding: EdgeInsets.symmetric(
+            horizontal: (helper.isMobile || helper.isTablet) ? 15 : 120,
+          ),
+          child: FoodFarmacyTimeline(),
+        ),
+        // DifferenceSection(),
+        // SizedBox(height: 40),
+      ],
     );
 
     // return SizedBox(

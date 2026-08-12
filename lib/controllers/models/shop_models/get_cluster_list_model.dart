@@ -39,6 +39,8 @@ class ClusterList {
   String? clusterName;
   String? clusterDescription;
   String? clusterThumbnail;
+  String? clusterAbout;
+  String? clusterAboutTitle;
   String? clusterComboName;
   String? comboDescription;
   String? comboThumbnail;
@@ -60,6 +62,8 @@ class ClusterList {
         this.clusterName,
         this.clusterDescription,
         this.clusterThumbnail,
+        this.clusterAbout,
+        this.clusterAboutTitle,
         this.clusterComboName,
         this.comboDescription,
         this.comboThumbnail,
@@ -81,6 +85,8 @@ class ClusterList {
     clusterName = json['cluster_name'].toString();
     clusterDescription = json['cluster_description'].toString();
     clusterThumbnail = json['cluster_thumbnail'].toString();
+    clusterAbout = json['cluster_about'].toString();
+    clusterAboutTitle = json['cluster_about_title'].toString();
     clusterComboName = json['cluster_combo_name'].toString();
     comboDescription = json['combo_description'].toString();
     comboThumbnail = json['combo_thumbnail'].toString();
@@ -116,6 +122,8 @@ class ClusterList {
     data['cluster_name'] = clusterName;
     data['cluster_description'] = clusterDescription;
     data['cluster_thumbnail'] = clusterThumbnail;
+    data['cluster_about'] = clusterAbout;
+    data['cluster_about_title'] = clusterAboutTitle;
     data['cluster_combo_name'] = clusterComboName;
     data['combo_description'] = comboDescription;
     data['combo_thumbnail'] = comboThumbnail;

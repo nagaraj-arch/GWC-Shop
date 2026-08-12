@@ -22,7 +22,7 @@ class _FooterWrapperState extends State<FooterWrapper> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: gWhiteColor,
-      endDrawer: const MobileDrawer(),
+      drawer: const MobileDrawer(),
       body: Column(
         children: [
           const DashboardAppBar(),
@@ -32,8 +32,7 @@ class _FooterWrapperState extends State<FooterWrapper> {
               controller: FooterWrapper.scrollController,
               children: [
                 widget.child,
-                const SizedBox(height: 40),
-                const FooterSection(),
+                const GwcFooter(),
               ],
             ),
           ),

@@ -42,21 +42,27 @@ class _CategoryCardState extends State<CategoryCard> {
     final prefs = AppConfig().preferences;
     await prefs?.setString("selectedCategory", widget.item.id.toString());
 
-    debugPrint("Saved selectedCategory = ${prefs?.getString("selectedCategory")}");
+    debugPrint(
+      "Saved selectedCategory = ${prefs?.getString("selectedCategory")}",
+    );
 
-    // ✅ If item.id == 32, switch to tab 1 (Shop Food Farmacy)
+    // ✅ If archived, always go to Launching screen
+    if (widget.item.isArchived?.trim() == "1") {
+      context.go('/launching');
+      return;
+    }
+
+    // ✅ Food Farmacy
     if (widget.item.id == 32) {
       final shopProvider = context.read<ShopProvider>();
 
-      // Change to tab 1
       shopProvider.changeTab(1);
-
-      // Navigate to home first
-      context.go("/");
-    } else {
-      // Normal navigation for other items
-      context.go('/category/${widget.item.id}');
+      context.go('/');
+      return;
     }
+
+    // ✅ Other categories
+    context.go('/category/${widget.item.id}');
   }
 
   @override
@@ -77,12 +83,12 @@ class _CategoryCardState extends State<CategoryCard> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: hover && widget.showShadow
                 ? [
-              BoxShadow(
-                color: Colors.black.withAlpha(30),
-                blurRadius: 20,
-                offset: const Offset(0, 12),
-              ),
-            ]
+                    BoxShadow(
+                      color: Colors.black.withAlpha(30),
+                      blurRadius: 20,
+                      offset: const Offset(0, 12),
+                    ),
+                  ]
                 : [],
           ),
           child: ClipRRect(
@@ -105,7 +111,9 @@ class _CategoryCardState extends State<CategoryCard> {
                   flex: 2,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: (widget.width * 0.04).clamp(12.0, 22.0),
+                    ),
                     decoration: const BoxDecoration(color: gPrimaryColor),
                     child: Row(
                       children: [
@@ -117,7 +125,7 @@ class _CategoryCardState extends State<CategoryCard> {
                             style: GoogleFonts.cormorantGaramond(
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
-                              fontSize: fontSize13,
+                              fontSize: (widget.width * 0.037).clamp(12.0, 18.0),
                             ),
                           ),
                         ),
@@ -125,7 +133,7 @@ class _CategoryCardState extends State<CategoryCard> {
                         Icon(
                           Icons.arrow_forward_ios,
                           color: gWhiteColor,
-                          size: 3.h,
+                          size: (widget.width * 0.05).clamp(16.0, 22.0),
                         ),
                       ],
                     ),

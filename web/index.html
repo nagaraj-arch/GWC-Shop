@@ -56,14 +56,70 @@
 </head>
 <body>
 <!--  <script src="flutter_bootstrap.js" async></script>-->
-<script src="flutter_bootstrap.js?v=1.2.4" async></script>
-<!--<script>-->
-<!--  window.addEventListener('load', function () {-->
-<!--    var script = document.createElement('script');-->
-<!--    script.src = "main.dart.js?v=1.1.9"; // change version every release-->
-<!--    document.body.appendChild(script);-->
-<!--  });-->
-<!--</script>-->
+<!--<script src="flutter_bootstrap.js?v=1.3.5" async></script>-->
+<script>
+  window.addEventListener('load', function () {
+    var script = document.createElement('script');
+    script.src = "main.dart.js?v=1.0.9"; // change version every release
+    document.body.appendChild(script);
+  });
+</script>
+
+<script>
+  (function () {
+    // Prevent Ctrl + mouse-wheel zoom
+    window.addEventListener(
+      'wheel',
+      function (event) {
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    // Prevent Ctrl + / Ctrl - / Ctrl 0 zoom shortcuts
+    window.addEventListener(
+      'keydown',
+      function (event) {
+        if (event.ctrlKey || event.metaKey) {
+          const zoomKeys = ['+', '=', '-', '_', '0'];
+
+          if (zoomKeys.includes(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }
+      },
+      true
+    );
+
+    // Prevent pinch zoom on touch devices
+    window.addEventListener(
+      'gesturestart',
+      function (event) {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      'gesturechange',
+      function (event) {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+GWC Shop
+    window.addEventListener(
+      'gestureend',
+      function (event) {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+  })();
+</script>
 
 </body>
 </html>

@@ -30,8 +30,9 @@ final CrossAxisAlignment? isRowAlign;
         text: text,
         style: TextStyle(
           color: clr,
-          fontFamily: fontMedium,
+          fontFamily: "Courier Prime",
           fontSize: size ?? fontSize12,
+          fontWeight: FontWeight.w400
         ),
         children: isRequired
             ? const [

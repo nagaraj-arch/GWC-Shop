@@ -31,6 +31,7 @@ class CategoryList {
   int? id;
   String? name;
   String? colorCode;
+  String? orderBy;
   String? maxAllowed;
   String? thumbnail;
   bool? hasAdditional;
@@ -57,12 +58,17 @@ class CategoryList {
   String? footerTitle;
   String? footerDescription;
   String? footerThumnail;
+  String? footerThumnailMobile;
+  String? footerThumnailLaptop;
+  String? footerThumnailTab;
+  String? footerThumnailDesktop;
   String? footerHighlightText;
+  String? isArchived;
 
   CategoryList({
     this.id,
     this.name,
-    this.colorCode,
+    this.colorCode,this.orderBy,
     this.maxAllowed,
     this.thumbnail,
     this.hasAdditional,
@@ -89,13 +95,20 @@ class CategoryList {
     this.footerTitle,
     this.footerDescription,
     this.footerThumnail,
+    this.footerThumnailMobile,
+    this.footerThumnailLaptop,
+    this.footerThumnailTab,
+    this.footerThumnailDesktop,
+
     this.footerHighlightText,
+    this.isArchived,
   });
 
   CategoryList.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name']?.toString();
     colorCode = json['color_code'].toString();
+    orderBy = json['order_by'].toString();
     maxAllowed = json['max_allowed']?.toString();
     thumbnail = json['thumbnail']?.toString();
     hasAdditional = json['has_additional'];
@@ -135,8 +148,15 @@ class CategoryList {
 
     footerTitle = json['footer_title']?.toString();
     footerDescription = json['footer_description']?.toString();
+
     footerThumnail = json['footer_thumnail']?.toString();
+    footerThumnailMobile = json['footer_thumnail_mobile']?.toString();
+    footerThumnailLaptop = json['footer_thumnail_laptop']?.toString();
+    footerThumnailTab = json['footer_thumnail_tab']?.toString();
+    footerThumnailDesktop = json['footer_thumnail_desktop']?.toString();
+
     footerHighlightText = json['footer_highlight_text']?.toString();
+    isArchived = json['is_archived'].toString();
   }
 
   Color get color {
@@ -160,6 +180,7 @@ class CategoryList {
     data['id'] = id;
     data['name'] = name;
     data['color_code'] = colorCode;
+    data['order_by'] = orderBy;
     data['max_allowed'] = maxAllowed;
     data['thumbnail'] = thumbnail;
     data['has_additional'] = hasAdditional;
@@ -193,8 +214,15 @@ class CategoryList {
     }
     data['footer_title'] = footerTitle;
     data['footer_description'] = footerDescription;
+
     data['footer_thumnail'] = footerThumnail;
+    data['footer_thumnail_mobile'] = footerThumnailMobile;
+    data['footer_thumnail_laptop'] = footerThumnailLaptop;
+    data['footer_thumnail_tab'] = footerThumnailTab;
+    data['footer_thumnail_desktop'] = footerThumnailDesktop;
+
     data['footer_highlight_text'] = footerHighlightText;
+    data['is_archived'] = isArchived;
     return data;
   }
 }

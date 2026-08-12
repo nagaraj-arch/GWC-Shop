@@ -6,7 +6,8 @@ const newDashboardLightGreyButtonColor = Color(0xffB9B4B4);
 
 const gsecondaryColor = Color(0xff2f513f);
 
-const gPrimaryColor = Color(0xffA6000F);
+// const gPrimaryColor = Color(0xffA6000F);
+const gPrimaryColor = Color(0xffC41a0f);
 const gPrimaryLightColor = Color(0xffC63D4A); // 20% lighter
 const gPrimaryLight2 = Color(0xffD96872); // 35% lighter
 const gPrimaryLight3 = Color(0xffE58D94); // 50% lighter
@@ -19,7 +20,8 @@ const gPrimaryLight5 = Color(0xffFCEEEF); // Background shade
 // const gsecondaryColor = Color(0xffD10034);
 // const gsecondaryColor = Color(0xffEE1004);
 
-const gMainColor = Color(0xffD7A100);
+const gMainColor = Color(0xffE3B548);
+// const gMainColor = Color(0xffD7A100);
 const gGreyColor = Color(0xff707070);
 
 const gBlackColor = Color(0xff000000);
@@ -60,6 +62,11 @@ const String fontMedium = "GothamMedium";
 const String fontBook = "GothamBook";
 
 // --- NEW FONT SIZE --- //
+double fontSize25 = 25.dp;
+double fontSize24 = 24.dp;
+double fontSize23 = 23.dp;
+double fontSize22 = 22.dp;
+double fontSize21 = 21.dp;
 double fontSize20 = 20.dp;
 double fontSize19 = 19.dp;
 double fontSize18 = 18.dp;

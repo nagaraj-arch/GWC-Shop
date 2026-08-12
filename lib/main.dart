@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gwc_shop/controllers/providers/shop_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,19 +61,30 @@ class _MyAppState extends State<MyApp> {
               debugShowCheckedModeBanner: false,
               routerConfig: appRouter,
               scrollBehavior: MyCustomScrollBehavior(),
+
               builder: (context, child) {
+                final currentLocation =
+                    appRouter.routerDelegate.currentConfiguration.uri.path;
+
+                final isCartScreen = currentLocation == '/cart';
+
                 return Stack(
                   children: [
-                    // Your main app content
+                    // Main app content
                     child ?? const SizedBox.shrink(),
-                    // ✅ Global cart button overlay - shows on ALL pages
 
-                    Positioned(
-                      right:30,
-                      bottom: 20, // above cart button
-                      child: SafeArea(child: FloatingShopButton()),
-                    ),
+                    // 🛍️ Floating shop button
+                    // Hide on Cart screen
 
+                      // Positioned(
+                      //   bottom: 30,
+                      //   left: 40,
+                      //   child: SafeArea(
+                      //     child: FloatingShopButton(),
+                      //   ),
+                      // ),
+
+                    if (!isCartScreen)
                     Positioned(
                       left: 0,
                       right: 0,

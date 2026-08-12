@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import '../get_additional_products_model/get_additional_products_model.dart';
 
 class ProductsByCategoryModel {
@@ -430,6 +432,7 @@ class Product {
 class Category {
   int? id;
   String? name;
+  String? colorCode;
   String? thumbnail;
   String? hasAdditional;
   String? subText;
@@ -454,7 +457,7 @@ class Category {
 
   Category({
     this.id,
-    this.name,
+    this.name,this.colorCode,
     this.thumbnail,
     this.hasAdditional,
     this.subText,
@@ -481,6 +484,7 @@ class Category {
   Category.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name']?.toString();
+    colorCode = json['color_code'].toString();
     thumbnail = json['thumbnail']?.toString();
     hasAdditional = json['has_additional']?.toString();
     subText = json['sub_text']?.toString();
@@ -504,10 +508,27 @@ class Category {
     updatedAt = json['updated_at']?.toString();
   }
 
+  Color get color {
+    try {
+      if (colorCode == null ||
+          colorCode!.isEmpty ||
+          colorCode == "null") {
+        return const Color(0xff3B2415);
+      }
+
+      return Color(
+        int.parse(colorCode!.replaceFirst('#', '0xff')),
+      );
+    } catch (e) {
+      return const Color(0xff3B2415);
+    }
+  }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['name'] = name;
+    data['color_code'] = colorCode;
     data['thumbnail'] = thumbnail;
     data['has_additional'] = hasAdditional;
     data['sub_text'] = subText;

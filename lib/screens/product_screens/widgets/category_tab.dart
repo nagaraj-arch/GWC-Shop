@@ -25,9 +25,6 @@ class _CategoryTabsState extends State<CategoryTabs> {
 
   IconData getCategoryIcon(String name) {
     switch (name.toLowerCase().trim()) {
-      // case "popular":
-      //   return Icons.local_fire_department_rounded;
-
       case "food farmacy":
         return Icons.eco_rounded;
 
@@ -35,19 +32,31 @@ class _CategoryTabsState extends State<CategoryTabs> {
         return Icons.spa_rounded;
 
       case "infusion":
-        return Icons.emoji_food_beverage_rounded;
+        return Icons.local_cafe_rounded;
 
       case "juice":
         return Icons.local_drink_rounded;
 
+      case "khichdi":
+        return Icons.rice_bowl_rounded;
+
       case "soup":
-        return Icons.ramen_dining_rounded;
+        return Icons.soup_kitchen_rounded;
 
       case "chutney & podi":
         return Icons.grass_rounded;
 
       case "dessert":
         return Icons.icecream_rounded;
+
+      case "ambalis":
+        return Icons.breakfast_dining_rounded;
+
+      case "nutri meal":
+        return Icons.restaurant_rounded;
+
+      case "flavours":
+        return Icons.grain_rounded;
 
       default:
         return Icons.category_rounded;
@@ -56,16 +65,14 @@ class _CategoryTabsState extends State<CategoryTabs> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    final isMobile = ScreenSizeHelper(context).isMobile;
 
     return Container(
-      height: isDesktop ? 70 : 60,
+      height: isMobile ? 60 : 70,
       margin: EdgeInsets.symmetric(vertical: 0.h),
       decoration: const BoxDecoration(
         color: gWhiteColor,
-        border: Border(
-          bottom: BorderSide(color: borderColor),
-        ),
+        border: Border(bottom: BorderSide(color: borderColor)),
       ),
       child: Center(
         child: TabBar(
@@ -76,10 +83,11 @@ class _CategoryTabsState extends State<CategoryTabs> {
           indicatorColor: Colors.transparent,
           overlayColor: WidgetStateProperty.all(Colors.transparent),
           splashFactory: NoSplash.splashFactory,
-          labelPadding: EdgeInsets.only(right: isDesktop ? 14 : 8),
+          labelPadding: EdgeInsets.only(right: isMobile ? 8 : 14),
           padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 2.w : 2.w,
-              vertical: isDesktop ? 1.h : .6.h),
+            horizontal: isMobile ? 2.w : 2.w,
+            vertical: isMobile ? .6.h : 1.h,
+          ),
           tabs: List.generate(widget.categories.length, (index) {
             final tab = widget.categories[index];
             final isSelected = widget.controller.index == index;
@@ -88,21 +96,21 @@ class _CategoryTabsState extends State<CategoryTabs> {
             return MouseRegion(
               cursor: SystemMouseCursors.click,
               onEnter: (_) {
-                if (isDesktop) setState(() => hoverIndex = index);
+                if (!isMobile) setState(() => hoverIndex = index);
               },
               onExit: (_) {
-                if (isDesktop) setState(() => hoverIndex = -1);
+                if (!isMobile) setState(() => hoverIndex = -1);
               },
               child: AnimatedScale(
                 duration: const Duration(milliseconds: 250),
                 scale: hovered || isSelected ? 1.08 : 1,
                 child: SizedBox(
-                  width: isDesktop ?80 : 70,
+                  width: isMobile ? 70 : 140,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: EdgeInsets.all(isDesktop ? 2 : 1.5),
+                        padding: EdgeInsets.all(isMobile ? 1.5 : 2),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: gWhiteColor,
@@ -122,30 +130,29 @@ class _CategoryTabsState extends State<CategoryTabs> {
                         ),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 250),
-                          padding: EdgeInsets.all(isDesktop ? 4 : 3),
+                          padding: EdgeInsets.all(isMobile ? 3 : 4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isSelected ? gPrimaryColor : gWhiteColor,
                           ),
-                          child:Icon(
+                          child: Icon(
                             getCategoryIcon(tab),
                             color: isSelected ? gWhiteColor : gPrimaryColor,
-                            size: isDesktop ? 14 : 12,
+                            size: isMobile ? 12 : 14,
                           ),
                         ),
                       ),
-                      SizedBox(height: isDesktop ? 4 : 3),
+                      SizedBox(height: isMobile ? 3 : 4),
                       Text(
                         tab,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontFamily: isSelected ? fontBold : fontMedium,
-                          fontSize: isDesktop
-                              ? (isSelected ? fontSize10 : fontSize09)
-                              : (isSelected ? 9.5 : 9),
+                          fontFamily: "Arimo",
+                          fontWeight: FontWeight.w800,
                           color: isSelected ? gPrimaryColor : gHintTextColor,
+                          fontSize: fontSize10,
                         ),
                       ),
                     ],
