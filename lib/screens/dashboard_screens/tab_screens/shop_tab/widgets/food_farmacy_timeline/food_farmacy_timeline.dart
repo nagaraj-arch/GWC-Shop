@@ -330,7 +330,7 @@ Is Your Gut out of Rhythm?
             onPressed: () {
               final shopProvider = context.read<ShopProvider>();
 
-              shopProvider.changeTab(1);
+              shopProvider.changeTab(2);
               context.go('/');
             },
             isLoading: false,

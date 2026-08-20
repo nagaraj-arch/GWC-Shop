@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gwc_shop/screens/dashboard_screens/widgets/banner_section.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../controllers/models/shop_models/category_model.dart';
@@ -10,7 +11,6 @@ import '../../../../utils/constants.dart';
 import '../../../../utils/responsive_helper.dart';
 import '../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 import '../../../../widgets/loading_widgets/loading_indicator.dart';
-import '../../../category_page/category_banner.dart';
 import '../../../category_page/category_product_card.dart';
 import '../../../category_page/cover_section.dart';
 import '../../../category_page/feature_grid.dart';
@@ -89,61 +89,53 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
           controller: _scrollController,
           child: Column(
             children: [
-              mobileDesign
-                  ? bannerSection()
-                  : CategoryBanner(
-                      category: category,
-                      showCoverSection: showCoverSection,
-                      onChooseProducts: () {
-                        debugPrint("Choose Products Clicked");
-                        _scrollToKey(_productsGridKey);
-                      },
-                      onLearnMore: () => _scrollToKey(_coverImageKey),
-                    ),
+              BannerSection(
+                category: category,
+                showCoverSection: showCoverSection,
+                onChooseProducts: () {
+                  debugPrint("Choose Products Clicked");
+                  _scrollToKey(_productsGridKey);
+                },
+                onLearnMore: () => _scrollToKey(_coverImageKey),
+              ),
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: contentHorizontalPadding,
-                  vertical: mobileDesign ? 0 : 30,
+                  vertical: mobileDesign ? 10 : 30,
                 ),
                 child: Column(
                   children: [
                     mobileDesign
                         ? mobileHeader(
-                      category,
-                      showAllProducts: _showAllProducts,
-                      onViewAll: () {
-                        setState(() {
-                          _showAllProducts = !_showAllProducts;
-                        });
-                      },
-                    )
+                            category,
+                            showAllProducts: _showAllProducts,
+                            onViewAll: () {
+                              setState(() {
+                                _showAllProducts = !_showAllProducts;
+                              });
+                            },
+                          )
                         : Row(
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: leftSection(category),
-                        ),
-                        Expanded(
-                          flex: 6,
-                          child: rightSection(category),
-                        ),
-                      ],
-                    ),
+                            children: [
+                              Expanded(flex: 5, child: leftSection(category)),
+                              Expanded(flex: 6, child: rightSection(category)),
+                            ],
+                          ),
                     const SizedBox(height: 20),
 
                     Builder(
                       key: _productsGridKey,
                       builder: (context) =>
-                      shopProvider.isLoading(
-                        ShopLoadingType.getProductsByCategory,
-                      )
+                          shopProvider.isLoading(
+                            ShopLoadingType.getProductsByCategory,
+                          )
                           ? const LoadingIndicator()
                           : AdditionalProductsGrid(
-                        products: shopProvider.products,
-                        category: widget.category.color,
-                        mobileDesign: mobileDesign,
-                        showAllProducts: _showAllProducts,
-                      ),
+                              products: shopProvider.products,
+                              category: widget.category.color,
+                              mobileDesign: mobileDesign,
+                              showAllProducts: _showAllProducts,
+                            ),
                     ),
                     const SizedBox(height: 20),
                     mobileDesign ? mobileRightSection(category) : SizedBox(),
@@ -184,6 +176,9 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
                   footerDescription: widget.category.footerDescription,
                   footerHighlightText: widget.category.footerHighlightText,
                 ),
+                SizedBox(
+                  height: responsive.isMobile || responsive.isTablet ? 40 : 0,
+                ),
               ],
               GwcFooter(),
             ],
@@ -210,22 +205,45 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
       bannerHeight = screenWidth * 0.50;
     }
 
-    return Container(
-      width: double.infinity,
-      height: bannerHeight,
-      padding: EdgeInsets.all(8),
-      child: ThumbnailView(
-        context: context,
-        imageUrl: widget.category.bannerLaptop ?? '',
-        enablePreview: true,
-        onTap: () {
-          debugPrint("Choose Products Clicked");
-          _scrollToKey(_productsGridKey);
-        },
-        borderRadius: 10,
-        width: double.infinity,
-        height: bannerHeight,
-        fit: BoxFit.fill,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: bannerHeight,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+              child: ThumbnailView(
+                context: context,
+                imageUrl: widget.category.bannerLaptop ?? '',
+                enablePreview: true,
+                onTap: () {
+                  debugPrint("Choose Products Clicked");
+                  _scrollToKey(_productsGridKey);
+                },
+                borderRadius: 0,
+                width: double.infinity,
+                height: bannerHeight,
+                fit: BoxFit.fill,
+              ),
+            ),
+          ),
+          // Container(
+          //   height: 50,
+          //   decoration: BoxDecoration(
+          //     color: widget.category.color.withAlpha(50),
+          //     // borderRadius: BorderRadius.only(
+          //     //     bottomLeft: Radius.circular(12),bottomRight: Radius.circular(12)
+          //     // ),
+          //   ),
+          // )
+        ],
       ),
     );
   }
@@ -233,19 +251,27 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
   bool _showAllProducts = false;
 
   Widget mobileHeader(
-      CategoryList category, {
-        required VoidCallback onViewAll,
-        required bool showAllProducts,
-      }) {
+    CategoryList category, {
+    required VoidCallback onViewAll,
+    required bool showAllProducts,
+  }) {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
-    // Smaller scaling for desktop and ultra-wide screens
-    final scale = (screenWidth / 1440.0).clamp(0.82, 1.08);
+    // Smaller title on small screens.
+    final double titleSize;
 
-    final titleSize = (40.0 * scale).clamp(22.0, 50.0);
+    if (screenWidth <= 500) {
+      titleSize = 22.0;
+    } else if (screenWidth <= 600) {
+      titleSize = 26.0;
+    } else {
+      final scale = (screenWidth / 1440.0).clamp(0.82, 1.08);
+      titleSize = (40.0 * scale).clamp(22.0, 50.0);
+    }
 
-    final titleLetterSpacing =
-    (-1.8 * scale).clamp(-2.2, -0.7);
+    final titleLetterSpacing = screenWidth <= 600
+        ? -0.8
+        : (-1.8 * (screenWidth / 1440.0).clamp(0.82, 1.08)).clamp(-2.2, -0.7);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -263,7 +289,7 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
                   'font-size': '${titleSize.toStringAsFixed(1)}px',
                   'line-height': '0.9',
                   'letter-spacing':
-                  '${titleLetterSpacing.toStringAsFixed(2)}px',
+                      '${titleLetterSpacing.toStringAsFixed(2)}px',
                 };
               }
 
@@ -279,10 +305,7 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
           onTap: onViewAll,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -291,10 +314,7 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
                   transitionBuilder: (child, animation) {
                     return RotationTransition(
                       turns: animation,
-                      child: ScaleTransition(
-                        scale: animation,
-                        child: child,
-                      ),
+                      child: ScaleTransition(scale: animation, child: child),
                     );
                   },
                   child: Container(
@@ -320,10 +340,7 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
                   transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
+                    return FadeTransition(opacity: animation, child: child);
                   },
                   child: Text(
                     showAllProducts ? "Less" : "View All",
@@ -416,30 +433,36 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
         ? screenWidth * 0.20
         : screenWidth * 0.12;
 
-    return Column(
-      children: [
-        Text(
-          category.subTextHighlight ?? '',
-          textAlign: TextAlign.right,
-          style: TextStyle(
-            fontFamily: "Archivo Narrow",
-            fontSize: titleSize,
-            color: gBlackColor,
-            fontWeight: FontWeight.w600,
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: widget.category.color.withAlpha(50),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            category.subTextHighlight ?? '',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontFamily: "Archivo Narrow",
+              fontSize: titleSize,
+              color: gBlackColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 6),
+          const SizedBox(height: 6),
 
-        ThumbnailView(
-          context: context,
-          imageUrl: category.subTextThubnail,
-          enablePreview: false,
-          fit: BoxFit.contain,
-          width: double.maxFinite,
-          height: thumbnailHeight,
-        ),
-      ],
+          ThumbnailView(
+            context: context,
+            imageUrl: category.subTextThubnail,
+            enablePreview: false,
+            fit: BoxFit.fill,
+            width: double.maxFinite,
+          ),
+        ],
+      ),
     );
   }
 
@@ -516,9 +539,9 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
             context: context,
             imageUrl: category.subTextThubnail,
             enablePreview: false,
-            fit: BoxFit.contain,
+            fit: BoxFit.fill,
             width: double.maxFinite,
-            height: imageHeight,
+            // height: imageHeight,
           ),
         ),
       ],

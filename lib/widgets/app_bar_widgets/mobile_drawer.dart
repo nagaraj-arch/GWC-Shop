@@ -12,9 +12,9 @@ class MobileDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menus = [
+      "Home",
       "All Products",
       "Shop Food Farmacy",
-      "Learn"
       // "Shop Gut Rhythm Products",
       // "Learn",
       // "Our Story",
@@ -36,8 +36,7 @@ class MobileDrawer extends StatelessWidget {
                   title: Text(
                     menus[index],
                     style: GoogleFonts.inter(
-                      fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                       color: selected ? gPrimaryColor : Colors.black,
                     ),
                   ),

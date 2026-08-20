@@ -2,98 +2,73 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
-import '../../../../../../utils/constants.dart';
-import '../../../../../../utils/responsive_helper.dart';
-import '../common_category_card.dart';
+import '../../../../../utils/constants.dart';
+import '../../../../../utils/responsive_helper.dart';
+import '../../shop_tab/widgets/common_category_card.dart';
 
-class RhythmWidget extends StatefulWidget {
-  const RhythmWidget({super.key});
+class FollowsRhythm extends StatefulWidget {
+  const FollowsRhythm({super.key});
 
   @override
-  State<RhythmWidget> createState() => _RhythmWidgetState();
+  State<FollowsRhythm> createState() => _FollowsRhythmState();
 }
 
-class _RhythmWidgetState extends State<RhythmWidget> {
+class _FollowsRhythmState extends State<FollowsRhythm> {
   @override
   Widget build(BuildContext context) {
     final res = ScreenSizeHelper(context);
 
+    final mobileDesign = res.isMobile || res.isTablet;
     final height =
         MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -
         kToolbarHeight -
-        60; // Announcement bar height
-
-    // ConstrainedBox + SingleChildScrollView instead of a hard SizedBox:
-    // when content fits, it looks identical to before (fills the target
-    // height). When content is taller than the available space — small
-    // phones, short laptop windows, text growing from live API data — it
-    // scrolls instead of throwing a RenderFlex overflow error.
-    return Container(
-      width: double.maxFinite,
-      color: gPrimaryColor.withValues(alpha: 0.1),
-      padding: EdgeInsets.symmetric(
-        horizontal: (res.isMobile || res.isTablet) ? 15 : 80,
-        vertical: 40
-      ),
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: height > 0 ? height : 0),
-          child: Center(
-            child: res.isMobile || res.isTablet
-                ? Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                heroSection()
-                    .animate()
-                    .fade()
-                    .slideY(begin: .2),
-
-                const SizedBox(height: 20),
-
-                const CommonCategorySlider(
-                  mode: SliderMode.single,
-                )
-                    .animate()
-                    .fade(delay: 300.ms)
-                    .scale(),
-              ],
-            )
-                : LayoutBuilder(
-              builder: (context, constraints) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 58,
-                      child: heroSection(),
-                    ),
-
-                    const SizedBox(width: 20),
-
-                    Expanded(
-                      flex: 50,
-                      child: CommonCategorySlider(
-                        mode: SliderMode.single,
-                      )
-                          .animate()
-                          .fade(delay: 300.ms)
-                          .scale(),
-                    ),
-                  ],
-                );
-              },
+        60;
+    return mobileDesign
+        ? Container(
+            color: gPrimaryColor.withValues(alpha: 0.1),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            child: heroSection(mobileDesign),
+          )
+        : Container(
+            width: double.maxFinite,
+            color: gPrimaryColor.withValues(alpha: 0.1),
+            padding: EdgeInsets.symmetric(
+              horizontal: (res.isMobile || res.isTablet) ? 15 : 80,
+              vertical: 40,
             ),
-          ),
-        ),
-      ),
-    );
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: height > 0 ? height : 0),
+                child: Center(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(flex: 58, child: heroSection(mobileDesign)),
+
+                          const SizedBox(width: 20),
+
+                          Expanded(
+                            flex: 50,
+                            child: CommonCategorySlider(
+                              mode: SliderMode.single,
+                            ).animate().fade(delay: 300.ms).scale(),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          );
   }
 
-  Widget heroSection() {
+  Widget heroSection(bool mobileDesign) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     final titleSize = (screenWidth * 0.075).clamp(46.0, 104.0);
@@ -101,8 +76,6 @@ class _RhythmWidgetState extends State<RhythmWidget> {
     final subtitleSize = (screenWidth * 0.040).clamp(28.0, 68.0);
 
     final bodySize = (screenWidth * 0.014).clamp(14.0, 22.0);
-
-    final subtitleLeftPadding = (screenWidth * 0.085).clamp(20.0, 90.0);
 
     final headline = RichText(
       text: TextSpan(
@@ -125,7 +98,7 @@ class _RhythmWidgetState extends State<RhythmWidget> {
     );
 
     final script = Padding(
-      padding: EdgeInsets.only(left: 170),
+      padding: EdgeInsets.only(left: mobileDesign ? 60 : 170),
       child: Transform.rotate(
         angle: -.12,
         child: Text(
@@ -152,7 +125,7 @@ class _RhythmWidgetState extends State<RhythmWidget> {
 </p>
 """;
 
-    final body =  DefaultTextStyle(
+    final body = DefaultTextStyle(
       style: const TextStyle(),
       textAlign: TextAlign.justify,
       child: HtmlWidget(
@@ -183,7 +156,7 @@ class _RhythmWidgetState extends State<RhythmWidget> {
           /// --------------------
           headline,
           script,
-          SizedBox(height: 70),
+          SizedBox(height: mobileDesign ? 20 : 70),
           SizedBox(
             width: (screenWidth * 0.82).clamp(300.0, 760.0),
             child: body,

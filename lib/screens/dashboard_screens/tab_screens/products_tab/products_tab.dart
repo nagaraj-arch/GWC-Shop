@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../controllers/providers/products_providers.dart';
+import '../../../../utils/constants.dart';
 import '../../../../utils/responsive_helper.dart';
 import '../../../../widgets/loading_widgets/loading_indicator.dart';
 import '../../../category_page/category_product_card.dart';
+import '../../../footer_widget/footer_section.dart';
 import '../../../product_screens/widgets/category_tab.dart';
 
 class ProductsTab extends StatefulWidget {
@@ -77,47 +79,62 @@ class _ProductsTabState extends State<ProductsTab>
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
     final provider = context.watch<ProductsProvider>();
-    return SingleChildScrollView(
-      child: provider.isLoading(LoadingType.getAdditionalProducts)
-          ? SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
-              child: const Center(child: LoadingIndicator()),
-            )
-          : provider.searchController.text.isEmpty
-          ? Column(
-              children: [
-                if (_tabController != null &&
-                    _tabController!.length ==
-                        provider.additionalCategories.length)
-                  CategoryTabs(
-                    controller: _tabController!,
-                    categories: provider.additionalCategories,
-                    getCount: provider.getCategoryCount,
+    return provider.isLoading(LoadingType.getAdditionalProducts)
+        ? SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: const Center(child: LoadingIndicator()),
+          )
+        : provider.searchController.text.isEmpty
+        ? Column(
+            children: [
+              if (_tabController != null &&
+                  _tabController!.length ==
+                      provider.additionalCategories.length)
+                CategoryTabs(
+                  controller: _tabController!,
+                  categories: provider.additionalCategories,
+                  getCount: provider.getCategoryCount,
+                ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.isMobile ? 20 : 100,
+                          vertical: 20,
+                        ),
+                        child: AdditionalProductsGrid(
+                          products: provider.filteredAdditionalProducts,
+                          isShop: true,
+                        ),
+                      ),
+                      GwcFooter(),
+                    ],
                   ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.isMobile ? 0 : 100,
-                    vertical: 40,
-                  ),
-                  child: AdditionalProductsGrid(
-                    products: provider.filteredAdditionalProducts,
-                    isShop: true,
-                  ),
+
                   // productsSection(responsive, provider),
                 ),
-              ],
-            )
-          : Column(
-              children: [
-                SizedBox(height: 40),
-                AdditionalProductsGrid(
+              ),
+            ],
+          )
+        : Column(
+            children: [
+              SizedBox(height: 40),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.isMobile || responsive.isTablet
+                      ? 20
+                      : 80.0,
+                ),
+                child: AdditionalProductsGrid(
                   products: provider.filteredAdditionalProducts,
                   isShop: true,
                 ),
-                SizedBox(height: 40),
-              ],
-            ),
-    );
+              ),
+              SizedBox(height: 40),
+            ],
+          );
   }
 
   // Widget productsSection(
@@ -210,4 +227,249 @@ class _ProductsTabState extends State<ProductsTab>
   //     ),
   //   );
   // }
+}
+
+class _CategoryTabItem extends StatefulWidget {
+  final TabController controller;
+  final int index;
+  final String categoryName;
+  final bool isMobile;
+
+  const _CategoryTabItem({
+    required this.controller,
+    required this.index,
+    required this.categoryName,
+    required this.isMobile,
+  });
+
+  @override
+  State<_CategoryTabItem> createState() => _CategoryTabItemState();
+}
+
+class _CategoryTabItemState extends State<_CategoryTabItem> {
+  bool isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.controller.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected =
+        widget.controller.index == widget.index;
+
+    // ⭐ Reduced width
+    final double tabWidth = widget.isMobile
+        ? 76
+        : 118;
+
+    return MouseRegion(
+      onEnter: (_) {
+        if (!widget.isMobile) {
+          setState(() {
+            isHovered = true;
+          });
+        }
+      },
+      onExit: (_) {
+        if (!widget.isMobile) {
+          setState(() {
+            isHovered = false;
+          });
+        }
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          widget.controller.animateTo(
+            widget.index,
+            duration: const Duration(
+              milliseconds: 280,
+            ),
+            curve: Curves.easeOutCubic,
+          );
+        },
+        child: SizedBox(
+          width: tabWidth,
+
+          // ⭐ Fixed height keeps every tab aligned
+          height: widget.isMobile ? 64 : 72,
+
+          child: AnimatedScale(
+            scale: isSelected ? 1.0 : 1.0,
+            duration: const Duration(
+              milliseconds: 200,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // ==================================================
+                // ICON
+                // ==================================================
+
+                SizedBox(
+                  height: widget.isMobile ? 30 : 34,
+                  child: Center(
+                    child: _buildExistingIcon(
+                      isSelected,
+                    ),
+                  ),
+                ),
+
+                SizedBox(
+                  height: widget.isMobile ? 3 : 4,
+                ),
+
+                // ==================================================
+                // TEXT
+                // ==================================================
+
+                SizedBox(
+                  height: widget.isMobile ? 28 : 32,
+                  width: double.infinity,
+                  child: Text(
+                    widget.categoryName,
+                    textAlign: TextAlign.center,
+
+                    maxLines: 2,
+                    softWrap: true,
+
+                    // No "..."
+                    overflow: TextOverflow.clip,
+
+                    style: TextStyle(
+                      fontFamily: 'Arimo',
+                      fontWeight: FontWeight.w800,
+                      color: isSelected
+                          ? gPrimaryColor
+                          : gHintTextColor,
+                      fontSize: widget.isMobile
+                          ? 9.5
+                          : fontSize10,
+                      height: 1.05,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==============================================================
+  // KEEP YOUR EXISTING ICON DESIGN HERE
+  // ==============================================================
+
+  Widget _buildExistingIcon(bool isSelected) {
+
+    IconData getCategoryIcon(String name) {
+      switch (name.toLowerCase().trim()) {
+        case 'food farmacy':
+          return Icons.eco_rounded;
+
+        case 'amla shots':
+          return Icons.spa_rounded;
+
+        case 'infusion':
+          return Icons.local_cafe_rounded;
+
+        case 'juice':
+          return Icons.local_drink_rounded;
+
+        case 'khichdi':
+          return Icons.rice_bowl_rounded;
+
+        case 'soup':
+          return Icons.soup_kitchen_rounded;
+
+        case 'chutney & podi':
+          return Icons.grass_rounded;
+
+        case 'dessert':
+          return Icons.icecream_rounded;
+
+        case 'ambalis':
+          return Icons.breakfast_dining_rounded;
+
+        case 'nutri meal':
+          return Icons.restaurant_rounded;
+
+        case 'flavours':
+          return Icons.grain_rounded;
+
+        default:
+          return Icons.category_rounded;
+      }
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(
+        milliseconds: 200,
+      ),
+      width: widget.isMobile ? 28 : 32,
+      height: widget.isMobile ? 28 : 32,
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.all(
+            widget.isMobile ? 1.5 : 2,
+          ),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: gWhiteColor,
+            border: Border.all(
+              color: isSelected
+                  ? gPrimaryColor
+                  : borderColor,
+              width: isSelected ? 1.5 : 0,
+            ),
+            boxShadow: isSelected
+                ? [
+              BoxShadow(
+                color: gBlackColor.withAlpha(20),
+                blurRadius: 5,
+                offset: const Offset(0, 4),
+              ),
+            ]
+                : const [],
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            padding: EdgeInsets.all(
+              widget.isMobile ? 3 : 4,
+            ),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected
+                  ? gPrimaryColor
+                  : gWhiteColor,
+            ),
+            child: Icon(
+              getCategoryIcon(widget.categoryName),
+              color: isSelected
+                  ? gWhiteColor
+                  : gPrimaryColor,
+              size: widget.isMobile ? 12 : 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

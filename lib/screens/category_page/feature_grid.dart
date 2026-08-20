@@ -2,19 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:gwc_shop/utils/constants.dart';
 
 import '../../../controllers/models/shop_models/category_model.dart';
-import '../../../utils/responsive_helper.dart';
 import '../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 
-/// A 2-column grid of feature cards (1 column on mobile), each showing:
-/// a numbered label ("01"/"02"/...) with a small underline, a circular
-/// icon overlapping the top edge, a bold centered title with its own
-/// underline, and a left-aligned description.
-///
-/// Every size inside a card is derived from that card's own width
-/// (cardWidth), so the whole card scales together as one proportional
-/// system instead of some parts scaling with width while others stay
-/// fixed-pixel — that mismatch is what causes a layout's spacing to
-/// grow or shrink oddly as the screen resizes.
 class FeatureGrid extends StatelessWidget {
   final List<ImportantPoints>? category;
   final Color? color;
@@ -23,96 +12,89 @@ class FeatureGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final responsive = ScreenSizeHelper(context);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final itemCount = category?.length ?? 0;
 
-    // Per-breakpoint card width ceiling and outer padding. Measured
-    // against the reference design rather than guessed — these values
-    // keep cards a consistent, moderate size instead of stretching to
-    // fill the full viewport on wide screens (every element in a card
-    // scales with cardWidth, so an uncapped width makes the whole card
-    // oversized, not just wider).
-    late final double maxCardWidth;
-    late final double horizontalPadding;
-
-    if (responsive.isMobile) {
-      maxCardWidth = double.infinity;
-      horizontalPadding = 16;
-    } else if (responsive.isTablet) {
-      maxCardWidth = 280;
-      horizontalPadding = 24;
-    } else if (responsive.isLaptop) {
-      maxCardWidth = 340;
-      horizontalPadding = 40;
-    } else if (responsive.isDesktop) {
-      maxCardWidth = 370;
-      horizontalPadding = 50;
-    } else {
-      // Smaller tiles on large and ultra-wide screens
-      maxCardWidth = 400;
-      horizontalPadding = 60;
+    if (itemCount == 0) {
+      return const SizedBox.shrink();
     }
 
-    // 1 column on mobile, 2 columns everywhere else.
-    final crossAxisCount = responsive.isMobile ? 1 : 2;
-    final gridSpacing = responsive.isMobile ? 16.0 : 24.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
 
-    // Caps the grid's total width and centers it, instead of letting
-    // cards stretch to fill the entire viewport on wide screens.
-    final maxGridWidth = responsive.isMobile
-        ? double.infinity
-        : (maxCardWidth * crossAxisCount) +
-              (gridSpacing * (crossAxisCount - 1));
+        // Always 2 columns.
+        const crossAxisCount = 2;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: responsive.isMobile
-              ? screenWidth
-              : maxGridWidth + (horizontalPadding * 2),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final totalSpacing = gridSpacing * (crossAxisCount - 1);
-            final cardWidth =
-                (constraints.maxWidth -
-                    totalSpacing -
-                    (horizontalPadding * 2)) /
-                crossAxisCount;
+        // Responsive horizontal padding.
+        final horizontalPadding = screenWidth < 400
+            ? 8.0
+            : screenWidth < 600
+            ? 12.0
+            : screenWidth < 900
+            ? 20.0
+            : 28.0;
 
-            // Landscape, but milder than a previous 1.35 attempt — at
-            // 1.35 the card's fixed content (icon margin + index +
-            // title + underline) alone exceeded the available height
-            // before the description even got any room, causing a
-            // real overflow. This value is paired with the trimmed
-            // avatarSize/gaps/description maxLines below to actually
-            // fit everything within a genuinely landscape card.
-            const childAspectRatio = 1.1;
+        // Responsive gap.
+        final spacing = screenWidth < 400
+            ? 8.0
+            : screenWidth < 600
+            ? 10.0
+            : screenWidth < 900
+            ? 16.0
+            : 20.0;
 
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+        // Don't allow cards to become unnecessarily huge
+        // on large desktop screens.
+        final gridWidth = screenWidth > 1000 ? 850.0 : screenWidth;
+
+        final availableWidth = gridWidth - (horizontalPadding * 2);
+
+        final cardWidth = (availableWidth - spacing) / 2;
+
+        /*
+         * IMPORTANT:
+         *
+         * Old:
+         * cardWidth * 1.08
+         *
+         * That made the cards almost square.
+         *
+         * New:
+         * approximately 0.76 × card width.
+         *
+         * This gives the compact design shown in your screenshot.
+         */
+        final cardHeight = (cardWidth * 0.76).clamp(115.0, 185.0);
+
+        return Center(
+          child: SizedBox(
+            width: gridWidth,
+            child: Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              itemCount: category?.length ?? 0,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                childAspectRatio: childAspectRatio,
-                crossAxisSpacing: gridSpacing,
-                mainAxisSpacing: responsive.isMobile ? 20 : 32,
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: itemCount,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: spacing,
+                  mainAxisSpacing: spacing * 1.35,
+                  mainAxisExtent: cardHeight,
+                ),
+                itemBuilder: (context, index) {
+                  return _FeatureCard(
+                    item: category![index],
+                    index: index,
+                    cardWidth: cardWidth,
+                    cardHeight: cardHeight,
+                    color: color,
+                  );
+                },
               ),
-              itemBuilder: (_, index) {
-                return _FeatureCard(
-                  item: category?[index],
-                  index: index,
-                  responsive: responsive,
-                  cardWidth: cardWidth,
-                  color: color,
-                );
-              },
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -120,165 +102,174 @@ class FeatureGrid extends StatelessWidget {
 class _FeatureCard extends StatelessWidget {
   final ImportantPoints? item;
   final int index;
-  final ScreenSizeHelper responsive;
   final double cardWidth;
+  final double cardHeight;
   final Color? color;
 
   const _FeatureCard({
     required this.item,
     required this.index,
-    required this.responsive,
     required this.cardWidth,
+    required this.cardHeight,
     required this.color,
   });
 
+  double _clamp(double value, double min, double max) {
+    return value.clamp(min, max).toDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Minimum-size floors as a general safety net — guarantees
-    // legibility on any narrow card (e.g. tablet's 2-column layout, or
-    // if this card is ever reused somewhere narrower) without affecting
-    // wider screens, where the proportional value already exceeds them.
-    // titleSize proportion reduced from 0.065 — at 0.065, the title's
-    // required width grows at almost the same rate as the card's
-    // available width as cardWidth increases, so it would stay right at
-    // the wrap point no matter how wide the card got. This lower
-    // proportion, combined with the wider cardWidth values above,
-    // actually leaves room for the title to fit on one line.
-    // avatarSize reduced from 0.34 — at the shorter landscape card
-    // height, the icon and its top margin/padding were consuming too
-    // large a share of the available vertical space, leaving no room
-    // for anything below it.
-    final avatarSize = cardWidth * 0.30;
-    final titleSize =
-    (cardWidth * 0.045) < 10.0 ? 10.0 : cardWidth * 0.045;
-    final descSize = (cardWidth * 0.050) < 11.0 ? 11.0 : cardWidth * 0.050;
-    final indexSize = cardWidth * 0.045;
+    final avatarSize = _clamp(cardWidth * 0.26, 42, 72);
+
+    final titleSize = _clamp(cardWidth * 0.043, 8.5, 14);
+
+    final descriptionSize = _clamp(cardWidth * 0.043, 8.5, 12);
+
+    final indexSize = _clamp(cardWidth * 0.040, 8, 13);
+
+    final cardRadius = _clamp(cardWidth * 0.065, 8, 18);
 
     final cardColor = color ?? const Color(0xff3B2415);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.topCenter,
-      children: [
-        Container(
-          margin: EdgeInsets.only(top: avatarSize / 2),
-          padding: EdgeInsets.only(
-            left: cardWidth * 0.08,
-            // avatarSize / 2 + 12,
-            right: cardWidth * 0.08,
-            // bottom: cardWidth * 0.08,
-          ),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(cardWidth * 0.08),
-          ),
-          child: Column(
-            children: [
-              SizedBox(height: cardWidth * 0.03),
-
-              // Index label ("01"/"02"/...) with its small underline.
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${index + 1}".padLeft(2, '0'),
-                      style: TextStyle(
-                        color: gMainColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: indexSize,
+    return SizedBox(
+      width: double.infinity,
+      height: cardHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Container(
+            width: double.infinity,
+            height: cardHeight,
+            margin: EdgeInsets.only(top: avatarSize * 0.42),
+            padding: EdgeInsets.fromLTRB(
+              cardWidth * 0.075,
+              cardWidth * 0.035,
+              cardWidth * 0.075,
+              cardWidth * 0.04,
+            ),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(cardRadius),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // -------------------------
+                // NUMBER
+                // -------------------------
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${index + 1}'.padLeft(2, '0'),
+                        style: TextStyle(
+                          color: gMainColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: indexSize,
+                          height: 1,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: cardWidth * 0.012),
-                    Container(
-                      width: cardWidth * 0.06,
-                      height: 2,
-                      color: gMainColor,
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Container(
+                        width: _clamp(cardWidth * 0.055, 8, 16),
+                        height: 1.5,
+                        color: gMainColor,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              SizedBox(height: cardWidth * 0.12),
+                // Space for overlapping image.
+                SizedBox(height: cardWidth * 0.075),
 
-              // Title
-              Text(
-                item?.title?.toUpperCase() ?? "",
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: "Avenir",
-                  fontWeight: FontWeight.w700,
-                  fontSize: titleSize,
-                  color: Colors.white,
-                  // Was a fixed 2.0px — a fixed pixel value eats into
-                  // the required width at a rate unrelated to how much
-                  // room the card actually has, working against the
-                  // one-line fit. Removed.
-                  height: 1.4,
+                // -------------------------
+                // TITLE
+                // -------------------------
+                Text(
+                  item?.title?.toUpperCase() ?? '',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Avenir',
+                    fontWeight: FontWeight.w700,
+                    fontSize: titleSize,
+                    color: Colors.white,
+                    height: 1.05,
+                  ),
                 ),
-              ),
 
-              SizedBox(height: cardWidth * 0.03),
+                SizedBox(height: cardWidth * 0.018),
 
-              Container(width: cardWidth * 0.18, height: 2, color: gMainColor),
+                // -------------------------
+                // UNDERLINE
+                // -------------------------
+                Center(
+                  child: Container(
+                    width: _clamp(cardWidth * 0.15, 12, 32),
+                    height: 1.5,
+                    color: gMainColor,
+                  ),
+                ),
 
-              SizedBox(height: cardWidth * 0.04),
+                SizedBox(height: cardWidth * 0.025),
 
-              // Description — maxLines reduced from 5/6, since a
-              // genuinely landscape (shorter) card has less vertical
-              // room than the previous portrait shape did.
-              Expanded(
-                child: DefaultTextStyle(
-                  style: const TextStyle(),
-                  textAlign: TextAlign.justify,
+                // -------------------------
+                // DESCRIPTION
+                // -------------------------
+                Expanded(
                   child: Text(
-                    item?.description ?? "",
+                    item?.description ?? '',
                     textAlign: TextAlign.left,
-                    // maxLines: 3,
-                    // overflow: TextOverflow.ellipsis,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: "Avenir",
+                      fontFamily: 'Avenir',
                       fontWeight: FontWeight.w500,
-                      fontSize: descSize,
+                      fontSize: descriptionSize,
                       color: const Color(0xffF5EDE6),
-                      letterSpacing: 0.0,
-                      height: 1.31,
+                      letterSpacing: 0,
+                      height: 1.18,
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        // Avatar thumbnail
-        Positioned(
-          top: avatarSize * 0.18,
-          child: Container(
-            width: avatarSize,
-            height: avatarSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-              border: Border.all(color: const Color(0xffD7A100), width: 2),
-            ),
-            padding: const EdgeInsets.all(5),
-            child: ClipOval(
-              child: ThumbnailView(
-                context: context,
-                imageUrl: item?.thumbnail,
-                width: avatarSize,
-                height: avatarSize,
-                enablePreview: false,
-                fit: BoxFit.cover,
+          // -------------------------
+          // AVATAR
+          // -------------------------
+          Positioned(
+            top: 0,
+            child: Container(
+              width: avatarSize,
+              height: avatarSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                border: Border.all(color: const Color(0xffD7A100), width: 1.5),
+              ),
+              padding: EdgeInsets.all(_clamp(cardWidth * 0.012, 2, 4)),
+              child: ClipOval(
+                child: ThumbnailView(
+                  context: context,
+                  imageUrl: item?.thumbnail,
+                  width: avatarSize,
+                  height: avatarSize,
+                  enablePreview: false,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -68,20 +68,14 @@ class _ThumbnailViewState extends State<ThumbnailView> {
   void _openPreview() {
     debugPrint("ThumbnailView _openPreview");
 
-    if (widget.imageUrl != null &&
-        widget.imageUrl!.trim().isNotEmpty) {
-      showImagePreview(
-        context: widget.context,
-        imageUrl: widget.imageUrl,
-      );
+    if (widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty) {
+      showImagePreview(context: widget.context, imageUrl: widget.imageUrl);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final child = _shouldLoad
-        ? _buildImage()
-        : _emptySpace();
+    final child = _shouldLoad ? _buildImage() : _emptySpace();
 
     // Normal image → no visibility detector required.
     if (!widget.lazyLoad) {
@@ -94,9 +88,7 @@ class _ThumbnailViewState extends State<ThumbnailView> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
       child: VisibilityDetector(
-        key: ValueKey(
-          'lazy_thumbnail_${widget.imageUrl}',
-        ),
+        key: ValueKey('lazy_thumbnail_${widget.imageUrl}'),
         onVisibilityChanged: _onVisibilityChanged,
         child: child,
       ),
@@ -106,10 +98,7 @@ class _ThumbnailViewState extends State<ThumbnailView> {
   /// Keeps the exact required space without showing
   /// placeholder.png while waiting for the image.
   Widget _emptySpace() {
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-    );
+    return SizedBox(width: widget.width, height: widget.height);
   }
 
   Widget _buildImage() {
@@ -130,9 +119,7 @@ class _ThumbnailViewState extends State<ThumbnailView> {
 
       // IMPORTANT:
       // Keep this because your API/server needs CORS fallback.
-      webHtmlElementStrategy:
-      WebHtmlElementStrategy.fallback,
-
+      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
       // IMPORTANT:
       // Keep your original fill behavior.
       fit: widget.fit,

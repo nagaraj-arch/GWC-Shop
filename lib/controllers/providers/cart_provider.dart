@@ -114,28 +114,58 @@ class CartProvider with ChangeNotifier {
     setLoading(CartLoadingType.phone, true);
 
     try {
-      final data = await NetworkService.post("$getEvaluationDataUrl$phone", {});
+      final data = await NetworkService.post(
+        "$getEvaluationDataUrl$phone",
+        {},
+      );
 
       if (data["status"] == 200) {
         final model = GetEvaluationDataModel.fromJson(data);
         final getUserAddress = model.data;
 
-        nameController.text = getUserAddress?.patient?.user?.name ?? '';
-        phoneController.text = getUserAddress?.patient?.user?.phone ?? '';
-        emailController.text = getUserAddress?.patient?.user?.email ?? '';
+        nameController.text =
+            getUserAddress?.patient?.user?.name ?? '';
+
+        phoneController.text =
+            getUserAddress?.patient?.user?.phone ?? '';
+
+        emailController.text =
+            getUserAddress?.patient?.user?.email ?? '';
+
         address1Controller.text =
         "No.${getUserAddress?.patient?.user?.address?.split('.').last}";
-        address2Controller.text = getUserAddress?.patient?.address2 ?? '';
-        pinCodeController.text = getUserAddress?.patient?.user?.pincode ?? '';
-        cityController.text = getUserAddress?.patient?.city ?? '';
-        stateController.text = getUserAddress?.patient?.state ?? '';
-        countryController.text = getUserAddress?.patient?.country ?? '';
+
+        address2Controller.text =
+            getUserAddress?.patient?.address2 ?? '';
+
+        // 🔥 Get pincode from phone API
+        final fetchedPinCode =
+            getUserAddress?.patient?.user?.pincode?.trim() ?? '';
+
+        pinCodeController.text = fetchedPinCode;
+
+        cityController.text =
+            getUserAddress?.patient?.city ?? '';
+
+        stateController.text =
+            getUserAddress?.patient?.state ?? '';
+
+        countryController.text =
+            getUserAddress?.patient?.country ?? '';
+
+        // 🔥 IMPORTANT:
+        // Phone API success -> automatically hit Pincode API
+        if (fetchedPinCode.length == 6) {
+          pinCodeList.clear();
+          partners.clear();
+          deliveryFee = 0;
+          calculateBill();
+
+          await fetchPinCode(context, fetchedPinCode);
+        }
       }
-      // else {
-      //   AppConfig().showSnackBar(context, data["message"], isError: true);
-      // }
     } catch (e) {
-      // AppConfig().showSnackBar(context, "Error $e", isError: true);
+      debugPrint("Phone API Error: $e");
     } finally {
       setLoading(CartLoadingType.phone, false);
     }
@@ -237,11 +267,13 @@ class CartProvider with ChangeNotifier {
       double totalFreight = 0;
       for (final partner in validPartners) {
         totalFreight += double.tryParse(partner.freightCharge.toString()) ?? 0;
+        debugPrint("Delivery Charges : ${partner.freightCharge.toString()}");
       }
-
+      debugPrint("Delivery Charges : ${validPartners.length}");
       final avgFreight = totalFreight / validPartners.length;
       deliveryFee = avgFreight > 0 ? avgFreight : 99;
 
+      debugPrint("Delivery Charges : $deliveryFee");
       calculateBill();
     } catch (e) {
       debugPrint("Error fetching courier: $e");
@@ -528,8 +560,8 @@ class CartProvider with ChangeNotifier {
   // Total items count for badge
   int get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
 
-  double roundToTwoDecimals(double value) {
-    return double.parse(value.toStringAsFixed(2));
+  int roundToWhole(double value) {
+    return value.round();
   }
 
   Future<bool> submitProgramApi(BuildContext context) async {
@@ -566,7 +598,7 @@ class CartProvider with ChangeNotifier {
         'pincode': pinCodeController.text,
         'product_details': itemsToPost,
         // 'total_amount': 1,
-        'total_amount': roundToTwoDecimals(grandTotal),
+        'total_amount': roundToWhole(grandTotal),
       };
 
       debugPrint("🔥 Program API Body: $body");
@@ -651,8 +683,8 @@ class CartProvider with ChangeNotifier {
         'country': countryController.text,
         'pincode': pinCodeController.text,
         'product_details': itemsToPost,
-        'total_amount': roundToTwoDecimals(grandTotal),
-        'employee_amount': roundToTwoDecimals(usedCredits),
+        'total_amount': roundToWhole(grandTotal),
+        'employee_amount': roundToWhole(usedCredits),
       };
 
       debugPrint("🔥 Program API Body: $body");
@@ -763,7 +795,7 @@ class CartProvider with ChangeNotifier {
         'payment_id': paymentId,
         'payment_status': status,
         'razorpay_order_id': paymentId,
-        'total_amount': roundToTwoDecimals(grandTotal),
+        'total_amount': roundToWhole(grandTotal),
       };
 
       final res = await NetworkService.post(

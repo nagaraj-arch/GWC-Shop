@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/api_urls.dart';
@@ -14,7 +15,7 @@ enum ShopLoadingType {
 }
 
 class ShopProvider extends ChangeNotifier {
-  int selectedTab = 0;
+  int selectedTab = kDebugMode ? 0 : 1;
   // CategoryList? selectedCategory;
 
   final PageController shopPageController = PageController(initialPage: 0);

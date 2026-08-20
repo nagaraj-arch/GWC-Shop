@@ -324,7 +324,7 @@ class _CartScreenState extends State<CartScreen>
     );
   }
 
-  buildForm(CartProvider provider) {
+ Widget buildForm(CartProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -26,10 +26,9 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
   bool showSearch = false;
 
   final menus = [
-    // "Home",
+    "Home",
     "All Products",
     "Shop Food Farmacy",
-    "Learn"
     // "Shop Gut Rhythm Products",
     // "Our Story",
   ];
@@ -179,7 +178,7 @@ class _DashboardAppBarState extends State<DashboardAppBar> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (shopProvider.selectedTab == 0)
+            if (shopProvider.selectedTab == 1)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOut,

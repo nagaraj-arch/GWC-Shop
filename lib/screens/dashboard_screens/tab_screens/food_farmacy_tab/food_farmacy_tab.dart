@@ -10,6 +10,8 @@ import 'package:gwc_shop/widgets/loading_widgets/loading_indicator.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../controllers/models/shop_models/get_cluster_list_model.dart';
+import '../../../../controllers/models/shop_models/products_by_category_model.dart';
+import '../../../../controllers/providers/cart_provider.dart';
 import '../../../../controllers/providers/shop_provider.dart';
 import '../../../../utils/responsive_helper.dart';
 import '../../../../widgets/button_widgets/button_widget.dart';
@@ -17,6 +19,7 @@ import '../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 import '../../../category_page/category_banner.dart';
 import '../../../category_page/category_product_card.dart';
 import '../../../category_page/footer_section.dart';
+import 'widgets/add_as_combo_banner.dart';
 
 class FoodFarmacyTab extends StatefulWidget {
   const FoodFarmacyTab({super.key});
@@ -212,6 +215,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
         url != null && url.trim().isNotEmpty && url != 'null';
 
     final showCoverSection = isValidImage(foodFarmacyCategory.coverImage);
+    final showFooterSection = isValidImage(foodFarmacyCategory.footerThumnail);
 
     final contentHorizontalPadding = responsive.isMobile
         ? 20.0
@@ -247,7 +251,8 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                       foodFarmacyCategory.subTextDescription ?? "",
                     ),
                     // SizedBox(height: 60),
-                    Align(alignment: Alignment.topLeft,
+                    Align(
+                      alignment: Alignment.topLeft,
                       child: ButtonWidget(
                         text: "Explore Individual Products",
                         onPressed: _scrollToExploreProducts,
@@ -299,17 +304,25 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                   child: ExploreOtherProducts(clr: foodFarmacyCategory.color),
                 ),
               ),
-              FooterSection(
-                footerThumbnail: foodFarmacyCategory.footerThumnail,
-                footerThumbnailMobile: foodFarmacyCategory.footerThumnailMobile,
-                footerThumbnailTab: foodFarmacyCategory.footerThumnailTab,
-                footerThumbnailLaptop: foodFarmacyCategory.footerThumnailLaptop,
-                footerThumbnailDesktop:
-                    foodFarmacyCategory.footerThumnailDesktop,
-                footerTitle: foodFarmacyCategory.footerTitle,
-                footerDescription: foodFarmacyCategory.footerDescription,
-                footerHighlightText: foodFarmacyCategory.footerHighlightText,
-              ),
+              if (showFooterSection) ...[
+                SizedBox(height: 40),
+                FooterSection(
+                  footerThumbnail: foodFarmacyCategory.footerThumnail,
+                  footerThumbnailMobile:
+                      foodFarmacyCategory.footerThumnailMobile,
+                  footerThumbnailTab: foodFarmacyCategory.footerThumnailTab,
+                  footerThumbnailLaptop:
+                      foodFarmacyCategory.footerThumnailLaptop,
+                  footerThumbnailDesktop:
+                      foodFarmacyCategory.footerThumnailDesktop,
+                  footerTitle: foodFarmacyCategory.footerTitle,
+                  footerDescription: foodFarmacyCategory.footerDescription,
+                  footerHighlightText: foodFarmacyCategory.footerHighlightText,
+                ),
+                SizedBox(
+                  height: responsive.isMobile || responsive.isTablet ? 40 : 0,
+                ),
+              ],
             ],
           );
   }
@@ -425,6 +438,19 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
   ) {
     final cluster = provider.clusterList;
 
+    final clusterProducts = selectedCluster?.productsData ?? [];
+
+    for (final product in clusterProducts) {
+      debugPrint('''
+================ COMBO PRODUCT ================
+Product ID      : ${product.productId}
+Product Name    : ${product.productTitle}
+Actual Price    : ${product.actualPrice}
+Discount Price  : ${product.discountPrice}
+================================================
+''');
+    }
+
     // Fixed 4 columns on tablet and up, 2 on mobile — was previously
     // 5/3/2 via the old binary ResponsiveHelper, which didn't match the
     // design's strict 4-column grid.
@@ -498,6 +524,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
             title,
             desc,
           ),
+
           // Text(
           //   "FOOD-FARMACY RECOMMENDATIONS",
           //   style: TextStyle(
@@ -563,6 +590,33 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
             ),
           ),
           const SizedBox(height: 40),
+          if (clusterProducts.length > 1) ...[
+            const SizedBox(height: 20),
+
+            AddAsComboBanner(
+              products: clusterProducts,
+              category: category,
+              originalPrice: clusterProducts.fold<double>(
+                0,
+                (sum, product) =>
+                    sum + (double.tryParse(product.actualPrice ?? "0") ?? 0),
+              ),
+              comboPrice: clusterProducts.fold<double>(
+                0,
+                    (sum, product) =>
+                sum +
+                    (double.tryParse(
+                      product.discountPrice ?? "0",
+                    ) ??
+                        0),
+              ),
+              onBuyCombo: () {
+                _addClusterAsCombo(context, clusterProducts, comboPrice: 0);
+              },
+            ),
+
+            const SizedBox(height: 20),
+          ],
         ],
       ),
     );
@@ -736,5 +790,34 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
         );
       },
     );
+  }
+
+  void _addClusterAsCombo(
+    BuildContext context,
+    List<Products> products, {
+    required double comboPrice,
+  }) {
+    if (products.length <= 1) return;
+
+    final cartManager = context.read<CartProvider>();
+
+    for (final product in products) {
+      cartManager.addItem(
+        context,
+        Item(
+          id: product.productId ?? 0,
+          name: product.productTitle ?? '',
+          price: double.parse(product.discountPrice ?? "0"),
+          description: product.productDescription,
+          category: product.category?.name ?? '',
+          specialTag: product.productSpecialTag,
+          weight: product.itemQty,
+          unitId: product.weightType?.id.toString(),
+          unitName: product.weightType?.unit,
+          servings: product.servings,
+          thumbnail: product.productThumbnailsUrls?.first,
+        ),
+      );
+    }
   }
 }

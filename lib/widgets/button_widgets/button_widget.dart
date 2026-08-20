@@ -119,7 +119,7 @@ class ButtonWidget extends StatelessWidget {
                           child: Icon(
                             icon,
                             color: iconColor ?? buttonTextColor,
-                            size: iconSize ?? 18,
+                            size: iconSize ?? 2.5.h,
                           ),
                         ),
                       Text(
@@ -128,7 +128,7 @@ class ButtonWidget extends StatelessWidget {
                           fontFamily: buttonFont,
                           color: buttonTextColor,
                           fontSize:
-                              responsive.isMobile ? fontSize11 : fontSize12,
+                              responsive.isMobile ? fontSize10 : fontSize11,
                         ),
                       ),
                     ],

@@ -12,7 +12,7 @@ import '../../widgets/loading_widgets/loading_indicator.dart';
 import '../footer_widget/footer_section.dart';
 import 'tab_screens/all_products_tab/all_products_tab.dart';
 import 'tab_screens/food_farmacy_tab/food_farmacy_tab.dart';
-import 'tab_screens/shop_tab/shop_tab.dart';
+import 'tab_screens/home_tab/home_tab.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -68,23 +68,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: gWhiteColor,
-      drawer: const MobileDrawer(),
+      drawer: MobileDrawer(),
       body: SafeArea(
         child: Column(
           children: [
             DashboardAppBar(scrollController: scrollController),
 
-            const AnnouncementBar(),
+            AnnouncementBar(),
 
             Expanded(
-              child: shopProvider.isLoading(
-                ShopLoadingType.getIngredientCategory,
-              )
-                  ? const LoadingIndicator()
-                  : _buildTabBody(
-                isDesktop,
-                selectedTab,
-              ),
+              child:
+                  shopProvider.isLoading(ShopLoadingType.getIngredientCategory)
+                  ? LoadingIndicator()
+                  : _buildTabBody(isDesktop, selectedTab),
             ),
           ],
         ),
@@ -93,20 +89,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTabBody(bool isDesktop, int tab) {
-    if (tab == 0) {
-      return const AllProductsTab();
+    if (tab == 1) {
+      return AllProductsTab();
+      // return ProductsTab();
     }
 
     return SingleChildScrollView(
       controller: scrollController,
       child: Column(
         children: [
-          if (tab == 1)
-            const FoodFarmacyTab()
-          else if (tab == 2)
-            const ShopTab()
+          if (tab == 2)
+            FoodFarmacyTab()
+          else if (tab == 0)
+            // ShopTab()
+            HomeTab()
           else
-            const ShopTab(),
+            // ShopTab(),
+            HomeTab(),
 
           GwcFooter(),
         ],

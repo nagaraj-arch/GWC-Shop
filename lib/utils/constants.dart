@@ -21,6 +21,8 @@ const gPrimaryLight5 = Color(0xffFCEEEF); // Background shade
 // const gsecondaryColor = Color(0xffEE1004);
 
 const gMainColor = Color(0xffE3B548);
+const gTabBackGroundColor = Color(0xffE5C966);
+
 // const gMainColor = Color(0xffD7A100);
 const gGreyColor = Color(0xff707070);
 

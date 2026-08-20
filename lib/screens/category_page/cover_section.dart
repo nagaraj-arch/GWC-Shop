@@ -44,14 +44,18 @@ class CoverSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
     final screenWidth = responsive.screenWidth;
-    // late final String imageUrl;
+
     late final double bannerHeight;
 
-    if (responsive.isMobile) {
-      bannerHeight = screenWidth * 0.50;
+    if (screenWidth <= 500) {
+      // 500px and below
+      bannerHeight = screenWidth * 0.40;
+    } else if (screenWidth <= 600) {
+      // 501px - 600px
+      bannerHeight = screenWidth * 0.45;
     } else if (responsive.isTablet) {
       bannerHeight = screenWidth * 0.50;
-    } else if (responsive.isLaptop) {
+    }else if (responsive.isLaptop) {
       bannerHeight = screenWidth * 0.45;
     } else if (responsive.isDesktop) {
       bannerHeight = screenWidth * 0.45;
