@@ -48,56 +48,28 @@ class BannerSection extends StatelessWidget {
     if (mobileDesign) {
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: bannerHeight,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                ),
-                child: ThumbnailView(
-                  context: context,
-                  imageUrl: category?.bannerLaptop ?? '',
-                  enablePreview: true,
-                  onTap: isFoodFarmacy ?? onChooseProducts ?? () {},
-                  borderRadius: 0,
-                  width: double.infinity,
-                  height: bannerHeight,
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-            // Container(
-            //   height: 50,
-            //   decoration: BoxDecoration(
-            //     color: widget.category.color.withAlpha(50),
-            //     // borderRadius: BorderRadius.only(
-            //     //     bottomLeft: Radius.circular(12),bottomRight: Radius.circular(12)
-            //     // ),
-            //   ),
-            // )
-          ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: ThumbnailView(
+            context: context,
+            imageUrl: category?.bannerSmall,
+            enablePreview: true,
+            onTap: isFoodFarmacy ?? onChooseProducts ?? () {},
+            borderRadius: 0,
+            width: double.infinity,
+            fit: BoxFit.fill,
+          ),
         ),
       );
     }
-    return SizedBox(
+    return ThumbnailView(
+      context: context,
+      imageUrl: category?.bannerLaptop ?? '',
+      enablePreview: true,
+      onTap: isFoodFarmacy ?? onChooseProducts ?? () {},
+      borderRadius: 0,
       width: double.infinity,
-      height: bannerHeight,
-      child: ThumbnailView(
-        context: context,
-        imageUrl: category?.bannerLaptop ?? '',
-        enablePreview: true,
-        onTap: isFoodFarmacy ?? onChooseProducts ?? () {},
-        borderRadius: 0,
-        width: double.infinity,
-        height: bannerHeight,
-        fit: BoxFit.fill,
-      ),
+      fit: BoxFit.fill,
     );
   }
 }

@@ -186,10 +186,10 @@ class _GutClockWidgetState extends State<GutClockWidget> {
 
     final desc = """
 <p style="font-family:'Courier Prime'; font-weight:400; font-size:inherit; font-style:italic;"
-  "color:#786f68;">
+  "color:#514A45;">
    Your Digestive capacity changes through the day.<br/>
    Are you giving it the
-<span style="color:#C41A0F; font-family:'Courier Prime'; font-weight:400; font-style:italic;">
+<span style="color:#C10D02; font-family:'Courier Prime'; font-weight:800; font-style:italic;">
      Right food at the Right time?
 </span>
 </span>

@@ -127,4 +127,11 @@ class ValidationUtils {
   String? countryValidator(String? value) {
     return textOnlyValidator(value, "Country");
   }
+
+  String? textValidator(String? value, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return "Please enter $fieldName";
+    }
+    return null;
+  }
 }

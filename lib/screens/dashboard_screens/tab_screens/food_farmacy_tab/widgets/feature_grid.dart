@@ -4,6 +4,7 @@ import 'package:flutter_sizer/flutter_sizer.dart';
 import '../../../../../../controllers/models/shop_models/category_model.dart';
 import '../../../../../../utils/responsive_helper.dart';
 import '../../../../../utils/constants.dart';
+import '../../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 
 class FeatureGrid extends StatelessWidget {
   final List<ImportantPoints>? category;
@@ -122,7 +123,13 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = cardWidth * 0.26;
+
+    final List<String> thumbnails = [
+      "assets/images/ff_cluster_benefits_1.png",
+      "assets/images/ff_cluster_benefits_2.png",
+      "assets/images/ff_cluster_benefits_3.png",
+      "assets/images/ff_cluster_benefits_4.png",
+    ];
 
     final titleSize =
     (cardWidth * 0.034) < 10.5 ? 10.5 : cardWidth * 0.034;
@@ -150,10 +157,10 @@ class _FeatureCard extends StatelessWidget {
           // Title
           Row(
             children: [
-              Image(
-                image: const AssetImage("assets/images/slider_right_arrow.png"),
-                color: gMainColor,
+              Image.asset(
+                thumbnails[index % thumbnails.length],
                 height: 4.h,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 8),
               Expanded(

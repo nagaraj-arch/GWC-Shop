@@ -64,6 +64,16 @@ const String fontMedium = "GothamMedium";
 const String fontBook = "GothamBook";
 
 // --- NEW FONT SIZE --- //
+double fontSize35 = 35.dp;
+double fontSize34 = 34.dp;
+double fontSize33 = 33.dp;
+double fontSize32 = 32.dp;
+double fontSize31 = 31.dp;
+double fontSize30 = 30.dp;
+double fontSize29 = 29.dp;
+double fontSize28 = 28.dp;
+double fontSize27 = 27.dp;
+double fontSize26 = 26.dp;
 double fontSize25 = 25.dp;
 double fontSize24 = 24.dp;
 double fontSize23 = 23.dp;

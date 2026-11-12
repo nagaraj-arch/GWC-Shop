@@ -53,6 +53,7 @@ class ClusterList {
   String? updatedAt;
   String? clusterThumbnailUrl;
   String? comboThumbnailUrl;
+  String? comboThumbnailMobileUrl;
   List<Products>? productsData;
   int? productCount;
   bool? hasValidProducts;
@@ -76,6 +77,7 @@ class ClusterList {
         this.updatedAt,
         this.clusterThumbnailUrl,
         this.comboThumbnailUrl,
+        this.comboThumbnailMobileUrl,
         this.productsData,
         this.productCount,
         this.hasValidProducts});
@@ -106,6 +108,7 @@ class ClusterList {
     updatedAt = json['updated_at'].toString();
     clusterThumbnailUrl = json['cluster_thumbnail_url'].toString();
     comboThumbnailUrl = json['combo_thumbnail_url'].toString();
+    comboThumbnailMobileUrl = json['combo_thumbnail_mobile_url'].toString();
     if (json['products_data'] != null) {
       productsData = <Products>[];
       json['products_data'].forEach((v) {
@@ -141,6 +144,7 @@ class ClusterList {
     data['updated_at'] = updatedAt;
     data['cluster_thumbnail_url'] = clusterThumbnailUrl;
     data['combo_thumbnail_url'] = comboThumbnailUrl;
+    data['combo_thumbnail_mobile_url'] = comboThumbnailMobileUrl;
     if (productsData != null) {
       data['products_data'] =
           productsData!.map((v) => v.toJson()).toList();

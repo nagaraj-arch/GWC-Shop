@@ -294,17 +294,32 @@ class _CategoryMenu extends StatelessWidget {
                         return;
                       }
 
-                      // ✅ Food Farmacy
-                      if (cat.id == 32) {
+                      // ============================================================
+                      // OPEN CATEGORY IN ALL PRODUCTS TAB
+                      // ============================================================
+
+                      if (cat.id != null) {
                         final shopProvider = context.read<ShopProvider>();
 
-                        shopProvider.changeTab(1);
+                        shopProvider.openFooterCategory(cat.id!);
+
+                        // Go back to dashboard.
+                        // Dashboard will automatically open AllProductsTab
+                        // because ShopProvider.selectedTab is set to 1.
                         context.go('/');
-                        return;
                       }
 
-                      // ✅ Other categories
-                      context.go('/category/${cat.id}');
+                      // ✅ Food Farmacy
+                      // if (cat.id == 32) {
+                      //   final shopProvider = context.read<ShopProvider>();
+                      //
+                      //   shopProvider.changeTab(2);
+                      //   context.go('/');
+                      //   return;
+                      // }
+                      //
+                      // // ✅ Other categories
+                      // context.go('/category/${cat.id}');
                     },
                   ),
                 );

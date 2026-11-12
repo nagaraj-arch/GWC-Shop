@@ -18,6 +18,15 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+
+  @override
+  void dispose() {
+    // Clear cached images when leaving this image-heavy page.
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final helper = ScreenSizeHelper(context);

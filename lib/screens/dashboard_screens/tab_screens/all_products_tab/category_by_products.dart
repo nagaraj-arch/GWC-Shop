@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/all_products_tab/widgets/mobile_catg_highlight.dart';
+import 'package:gwc_shop/screens/dashboard_screens/tab_screens/all_products_tab/widgets/recommented_products_Section.dart';
 import 'package:gwc_shop/screens/dashboard_screens/widgets/banner_section.dart';
 import 'package:provider/provider.dart';
 
@@ -33,6 +35,9 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
 
   @override
   void dispose() {
+    // Clear cached images when leaving this image-heavy page.
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
     _scrollController.dispose();
     super.dispose();
   }
@@ -62,8 +67,15 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
     bool isValidImage(String? url) =>
         url != null && url.trim().isNotEmpty && url != 'null';
 
-    final showCoverSection = isValidImage(category.coverImage);
-    final showFooterSection = isValidImage(category.footerThumnail);
+    final showCoverSection =
+        isValidImage(category.coverImage) ||
+        isValidImage(category.coverImageDesktop) ||
+        isValidImage(category.coverImageMobile);
+
+    final showFooterSection =
+        isValidImage(category.footerThumnail) ||
+        isValidImage(category.footerThumnailDesktop) ||
+        isValidImage(category.footerThumnailMobile);
 
     final contentHorizontalPadding = responsive.isMobile
         ? 20.0
@@ -85,105 +97,159 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
           return Center(child: LoadingIndicator());
         }
 
-        return SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              BannerSection(
-                category: category,
-                showCoverSection: showCoverSection,
-                onChooseProducts: () {
-                  debugPrint("Choose Products Clicked");
-                  _scrollToKey(_productsGridKey);
-                },
-                onLearnMore: () => _scrollToKey(_coverImageKey),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: contentHorizontalPadding,
-                  vertical: mobileDesign ? 10 : 30,
-                ),
+        return mobileDesign
+            ? SingleChildScrollView(
+                controller: _scrollController,
                 child: Column(
                   children: [
-                    mobileDesign
-                        ? mobileHeader(
-                            category,
-                            showAllProducts: _showAllProducts,
-                            onViewAll: () {
-                              setState(() {
-                                _showAllProducts = !_showAllProducts;
-                              });
-                            },
-                          )
-                        : Row(
-                            children: [
-                              Expanded(flex: 5, child: leftSection(category)),
-                              Expanded(flex: 6, child: rightSection(category)),
-                            ],
-                          ),
-                    const SizedBox(height: 20),
-
-                    Builder(
-                      key: _productsGridKey,
-                      builder: (context) =>
-                          shopProvider.isLoading(
-                            ShopLoadingType.getProductsByCategory,
-                          )
-                          ? const LoadingIndicator()
-                          : AdditionalProductsGrid(
-                              products: shopProvider.products,
-                              category: widget.category.color,
-                              mobileDesign: mobileDesign,
-                              showAllProducts: _showAllProducts,
-                            ),
+                    BannerSection(
+                      category: category,
+                      showCoverSection: showCoverSection,
+                      onChooseProducts: () {
+                        debugPrint("Choose Products Clicked");
+                        _scrollToKey(_productsGridKey);
+                      },
+                      onLearnMore: () => _scrollToKey(_coverImageKey),
                     ),
-                    const SizedBox(height: 20),
-                    mobileDesign ? mobileRightSection(category) : SizedBox(),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: contentHorizontalPadding,
+                        vertical: mobileDesign ? 10 : 30,
+                      ),
+                      child: Column(
+                        children: [
+                          mobileDesign
+                              ? mobileHeader(
+                                  category,
+                                  showAllProducts: _showAllProducts,
+                                  provider: shopProvider,
+                                  onViewAll: () {
+                                    setState(() {
+                                      _showAllProducts = !_showAllProducts;
+                                    });
+                                  },
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 5,
+                                      child: leftSection(category),
+                                    ),
+                                    Expanded(
+                                      flex: 6,
+                                      child: rightSection(category),
+                                    ),
+                                  ],
+                                ),
+                          const SizedBox(height: 20),
+                          // Builder(
+                          //   key: _productsGridKey,
+                          //   builder: (context) =>
+                          //       shopProvider.isLoading(
+                          //         ShopLoadingType.getProductsByCategory,
+                          //       )
+                          //       ? const LoadingIndicator()
+                          //       : RecommendedProductsSection(
+                          //         products: shopProvider.products,
+                          //         category: widget.category.color,
+                          //       ),
+                          // ),
+                          Builder(
+                            key: _productsGridKey,
+                            builder: (context) =>
+                                shopProvider.isLoading(
+                                  ShopLoadingType.getProductsByCategory,
+                                )
+                                ? const LoadingIndicator()
+                                : AdditionalProductsGrid(
+                                    products: shopProvider.products,
+                                    category: widget.category.color,
+                                    mobileDesign: mobileDesign,
+                                    showAllProducts: _showAllProducts,
+
+                                    afterFirstRow: mobileDesign
+                                        ? MobileCategoryHighlight(
+                                            category: category,
+                                          )
+                                        : null,
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    if (showCoverSection) ...[
+                      Builder(
+                        key: _coverImageKey,
+                        builder: (context) {
+                          return CoverSection(
+                            coverImage: widget.category.coverImage,
+                            coverImageMobile: widget.category.coverImageMobile,
+                            coverImageLaptop: widget.category.coverImageLaptop,
+                            coverImageTab: widget.category.coverImageTab,
+                            coverImageDesktop:
+                                widget.category.coverImageDesktop,
+                            coverTitle: widget.category.coverTitle,
+                            coverDesc: widget.category.coverDescription,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                    FeatureGrid(
+                      category: widget.category.importantPoints,
+                      color: widget.category.color,
+                    ),
+                    if (showFooterSection) ...[
+                      SizedBox(height: 40),
+                      FooterSection(
+                        footerThumbnail: widget.category.footerThumnail,
+                        footerThumbnailMobile:
+                            widget.category.footerThumnailMobile,
+                        footerThumbnailTab: widget.category.footerThumnailTab,
+                        footerThumbnailLaptop:
+                            widget.category.footerThumnailLaptop,
+                        footerThumbnailDesktop:
+                            widget.category.footerThumnailDesktop,
+                        footerTitle: widget.category.footerTitle,
+                        footerDescription: widget.category.footerDescription,
+                        footerHighlightText:
+                            widget.category.footerHighlightText,
+                      ),
+                      SizedBox(
+                        height: responsive.isMobile || responsive.isTablet
+                            ? 40
+                            : 0,
+                      ),
+                    ],
+                    GwcFooter(),
                   ],
                 ),
-              ),
-              SizedBox(height: 40),
-              if (showCoverSection) ...[
-                Builder(
-                  key: _coverImageKey,
-                  builder: (context) {
-                    return CoverSection(
-                      coverImage: widget.category.coverImage,
-                      coverImageMobile: widget.category.coverImageMobile,
-                      coverImageLaptop: widget.category.coverImageLaptop,
-                      coverImageTab: widget.category.coverImageTab,
-                      coverImageDesktop: widget.category.coverImageDesktop,
-                      coverTitle: widget.category.coverTitle,
-                      coverDesc: widget.category.coverDescription,
-                    );
-                  },
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: contentHorizontalPadding,
+                        vertical: 30,
+                      ),
+                      child: AdditionalProductsGrid(
+                        products: shopProvider.products,
+                        category: widget.category.color,
+                        mobileDesign: mobileDesign,
+                        showAllProducts: _showAllProducts,
+
+                        afterFirstRow: mobileDesign
+                            ? MobileCategoryHighlight(category: category)
+                            : null,
+                      ),
+                    ),
+                    GwcFooter(),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
-              FeatureGrid(
-                category: widget.category.importantPoints,
-                color: widget.category.color,
-              ),
-              if (showFooterSection) ...[
-                SizedBox(height: 40),
-                FooterSection(
-                  footerThumbnail: widget.category.footerThumnail,
-                  footerThumbnailMobile: widget.category.footerThumnailMobile,
-                  footerThumbnailTab: widget.category.footerThumnailTab,
-                  footerThumbnailLaptop: widget.category.footerThumnailLaptop,
-                  footerThumbnailDesktop: widget.category.footerThumnailDesktop,
-                  footerTitle: widget.category.footerTitle,
-                  footerDescription: widget.category.footerDescription,
-                  footerHighlightText: widget.category.footerHighlightText,
-                ),
-                SizedBox(
-                  height: responsive.isMobile || responsive.isTablet ? 40 : 0,
-                ),
-              ],
-              GwcFooter(),
-            ],
-          ),
-        );
+              );
       },
     );
   }
@@ -254,6 +320,7 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
     CategoryList category, {
     required VoidCallback onViewAll,
     required bool showAllProducts,
+    required ShopProvider provider,
   }) {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
@@ -299,63 +366,50 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
           ),
         ),
 
-        const SizedBox(width: 6),
-
-        InkWell(
-          onTap: onViewAll,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) {
-                    return RotationTransition(
-                      turns: animation,
-                      child: ScaleTransition(scale: animation, child: child),
-                    );
-                  },
-                  child: Container(
-                    key: ValueKey(showAllProducts),
-                    width: 22,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: gPrimaryColor.withValues(alpha: 0.10),
-                    ),
-                    child: Icon(
-                      showAllProducts
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: gPrimaryColor,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 4),
-
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  child: Text(
-                    showAllProducts ? "Less" : "View All",
-                    key: ValueKey(showAllProducts),
-                    style: GoogleFonts.robotoCondensed(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: gPrimaryColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        // const SizedBox(width: 6),
+        //
+        // InkWell(
+        //   onTap: onViewAll,
+        //   borderRadius: BorderRadius.circular(6),
+        //   child: AnimatedContainer(
+        //     duration: const Duration(milliseconds: 250),
+        //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        //     decoration: BoxDecoration(
+        //       color: category.color,
+        //       borderRadius: BorderRadius.circular(6),
+        //       border: Border.all(color: gMainColor),
+        //     ),
+        //     child: Row(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         AnimatedSwitcher(
+        //           duration: const Duration(milliseconds: 250),
+        //           child: Text(
+        //             showAllProducts
+        //                 ? "Show Less"
+        //                 : "Explore all ${provider.products.length} ${category.name} ",
+        //             key: ValueKey(showAllProducts),
+        //             style: GoogleFonts.robotoCondensed(
+        //               fontSize: fontSize10,
+        //               fontWeight: FontWeight.w700,
+        //               color: gWhiteColor,
+        //             ),
+        //           ),
+        //         ),
+        //
+        //         const SizedBox(width: 3),
+        //
+        //         Icon(
+        //           showAllProducts
+        //               ? Icons.keyboard_arrow_up_rounded
+        //               : Icons.arrow_forward_ios_rounded,
+        //           size: 11,
+        //           color: gWhiteColor,
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -422,50 +476,6 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
     );
   }
 
-  Widget mobileRightSection(CategoryList category) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final scale = (screenWidth / 1440.0).clamp(0.82, 1.08);
-    final titleSize = (40.0 * scale).clamp(20.0, 60.0);
-
-    final thumbnailHeight = screenWidth < 600
-        ? screenWidth * 0.28
-        : screenWidth < 1024
-        ? screenWidth * 0.20
-        : screenWidth * 0.12;
-
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: widget.category.color.withAlpha(50),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            category.subTextHighlight ?? '',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontFamily: "Archivo Narrow",
-              fontSize: titleSize,
-              color: gBlackColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          ThumbnailView(
-            context: context,
-            imageUrl: category.subTextThubnail,
-            enablePreview: false,
-            fit: BoxFit.fill,
-            width: double.maxFinite,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget rightSection(CategoryList category) {
     final responsive = ScreenSizeHelper(context);
 
@@ -491,16 +501,6 @@ class _CategoryByProductsState extends State<CategoryByProducts> {
         : responsive.isTablet
         ? 12.0
         : 16.0;
-
-    final imageHeight = responsive.isMobile
-        ? 150.0
-        : responsive.isTablet
-        ? 150.0
-        : responsive.isLaptop
-        ? 140.0
-        : responsive.isDesktop
-        ? 240.0
-        : 280.0;
 
     return Row(
       children: [

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,6 +16,7 @@ import '../../../../../../utils/constants.dart';
 import '../../../../../../utils/responsive_helper.dart';
 import '../../../../../utils/app_config.dart';
 import '../../../../category_page/category_product_card.dart';
+import '../../../widgets/horizontal_tab_heading.dart';
 
 // ===============================================================
 // GUT CLOCK MODEL
@@ -24,14 +26,12 @@ class GutClockItem {
   final String meal;
   final String food;
   final String icon;
-  final Color tabColor;
   final String story;
 
   const GutClockItem({
     required this.meal,
     required this.food,
     required this.icon,
-    required this.tabColor,
     required this.story,
   });
 }
@@ -52,13 +52,11 @@ class _GutClockFollowsState extends State<GutClockFollows>
   // ===============================================================
   // DATA
   // ===============================================================
-
   final List<GutClockItem> gutClockItems = [
     GutClockItem(
       meal: 'EARLY MORNING',
       food: 'AMBALI',
       icon: 'assets/images/early_morning.png',
-      tabColor: const Color(0xff08716D),
       story:
           'As you wake up, so do the <red>trillion micro biome</red> in your gut!\n'
           'This is the best time to get their meal ready & build more of them.\n\n'
@@ -73,7 +71,6 @@ class _GutClockFollowsState extends State<GutClockFollows>
       meal: 'MORNING',
       food: 'NUTRIMEAL',
       icon: 'assets/images/morning.png',
-      tabColor: const Color(0xff29466C),
       story:
           '“Eat breakfast like a king”\n'
           'Means more <red>Quality over Quantity!</red> '
@@ -89,7 +86,6 @@ class _GutClockFollowsState extends State<GutClockFollows>
       meal: 'MID MORNING',
       food: 'INFUSION',
       icon: 'assets/images/mid_morning.png',
-      tabColor: const Color(0xff64516F),
       story:
           '<red>Not every pause needs another snack.</red>\n'
           'A warm infusion brings flavour, hydration and a lighter\n'
@@ -105,7 +101,6 @@ class _GutClockFollowsState extends State<GutClockFollows>
       meal: 'NOON',
       food: 'KHICHDI',
       icon: 'assets/images/noon.png',
-      tabColor: const Color(0xffA46B36),
       story:
           'Struggling with <red>Cravings post 4pm?</red>\n'
           'Focus on what you eat at lunch! This is when your Gut is\n'
@@ -121,7 +116,6 @@ class _GutClockFollowsState extends State<GutClockFollows>
       meal: 'EVENING',
       food: 'HEALTHY INDULGENCE',
       icon: 'assets/images/evening.png',
-      tabColor: const Color(0xffA65A38),
       story:
           '<red>Sometimes your gut asks for some pampering</red>\n'
           'A bowl of naturally creamy kheer on those days, is just\n'
@@ -137,7 +131,6 @@ class _GutClockFollowsState extends State<GutClockFollows>
       meal: 'NIGHT',
       food: 'SOUP',
       icon: 'assets/images/night.png',
-      tabColor: const Color(0xff465D67),
       story:
           'Struggling with <red>Satisfactory Evacuation?</red>\n'
           'Its probably insufficient Fruits & vegetable fiber in your diet.\n\n'
@@ -148,6 +141,53 @@ class _GutClockFollowsState extends State<GutClockFollows>
           'Satiating and helps lower the load on your gut post sunset.',
     ),
   ];
+
+  Color _getCategoryColor(
+      String food,
+      List<Products> products,
+      ) {
+    String normalizeCategoryName(String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+
+    final targetFood = normalizeCategoryName(food);
+
+    final matchingProduct = products.where((product) {
+      final categoryName =
+      normalizeCategoryName(product.category?.name ?? '');
+
+      // Normal exact match
+      if (categoryName == targetFood) {
+        return true;
+      }
+
+      // Healthy Indulgence / Healthy Indulgences
+      if (targetFood == 'healthy indulgence' &&
+          categoryName == 'healthy indulgences') {
+        return true;
+      }
+
+      if (targetFood == 'healthy indulgences' &&
+          categoryName == 'healthy indulgence') {
+        return true;
+      }
+
+      return false;
+    }).firstOrNull;
+
+    debugPrint(
+      'TAB COLOR → Food: $food | '
+          'Category: ${matchingProduct?.category?.name} | '
+          'Color: ${matchingProduct?.category?.color}',
+    );
+
+    return matchingProduct?.category?.color ?? gPrimaryColor;
+  }
 
   // ===============================================================
   // STATE
@@ -378,8 +418,10 @@ class _GutClockFollowsState extends State<GutClockFollows>
 
           SizedBox(height: mobileDesign ? 18 : 28),
 
-          _buildHorizontalTabs(mobileDesign),
-
+          _buildHorizontalTabs(
+            mobileDesign,
+            productsProvider.additionalProducts,
+          ),
           _buildSelectedDetails(mobileDesign, filteredProducts),
         ],
       ),
@@ -391,14 +433,9 @@ class _GutClockFollowsState extends State<GutClockFollows>
   // ===============================================================
 
   Widget _buildHeader(bool mobileDesign) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    final titleSize = (screenWidth * 0.065).clamp(20.0, 60.0);
-
-    final bodySize = (screenWidth * 0.014).clamp(14.0, 22.0);
 
     final title = """
-<h1 style="font-family:'Archivo Narrow'; font-weight:600;">
+<h1 style="font-family:'Archivo Narrow'; font-weight:700;">
 Your Gut Has a Clock! Are You Aware Of It?<br>
 </h1>
 """;
@@ -407,7 +444,7 @@ Your Gut Has a Clock! Are You Aware Of It?<br>
 <p style="font-family:'Courier Prime'; font-weight:400; font-style:italic; color:#786f68;">
 Your Digestive capacity changes through the day.<br/>
 Are you giving it the
-<span style="color:#C41A0F; font-family:'Courier Prime'; font-weight:400; font-style:italic;">
+<span style="color:#C10D02; font-family:'Courier Prime'; font-weight:800; font-style:italic;">
 Right food at the Right time?
 </span>
 </p>
@@ -430,7 +467,6 @@ Right food at the Right time?
                       element.localName == 'span' ||
                       element.localName == 'div') {
                     return {
-                      'font-size': '${titleSize}px',
                       'line-height': '0.9',
                       'letter-spacing': '-2px',
                     };
@@ -438,7 +474,7 @@ Right food at the Right time?
 
                   return null;
                 },
-                textStyle: const TextStyle(height: 1),
+                textStyle: TextStyle(height: 1,fontSize: fontSize14),
               ),
 
               SizedBox(height: mobileDesign ? 8 : 12),
@@ -452,12 +488,11 @@ Right food at the Right time?
                     if (element.localName == 'p' ||
                         element.localName == 'span' ||
                         element.localName == 'div') {
-                      return {'font-size': '${bodySize}px'};
                     }
 
                     return null;
                   },
-                  textStyle: const TextStyle(height: 1.31, letterSpacing: 1.5),
+                  textStyle: TextStyle(fontSize: fontSize12,height: 1.31, letterSpacing: 1.5),
                 ).animate().fade(delay: 300.ms).slideY(begin: 0.15),
               ),
             ],
@@ -475,9 +510,7 @@ Right food at the Right time?
               return Transform.scale(scale: value, child: child);
             },
             child: Image.asset(
-              'assets/images/suitability.png',
-              width: mobileDesign ? 80 : 125,
-              height: mobileDesign ? 80 : 125,
+              'assets/images/gut_clock.png',
               fit: BoxFit.contain,
             ),
           ),
@@ -490,32 +523,10 @@ Right food at the Right time?
   // TAB BAR
   // ===============================================================
 
-  Widget _buildHorizontalTabs(bool mobileDesign) {
+  Widget _buildHorizontalTabs(bool mobileDesign, List<Products> allProducts) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'SLIDE THROUGH YOUR DAY',
-              style: TextStyle(
-                fontFamily: "Courier Prime",
-                fontSize: fontSize13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: .4,
-                color: gMainColor,
-              ),
-            ),
-
-            const SizedBox(width: 6),
-
-            Image.asset(
-              'assets/images/slider_right_arrow.png',
-              width: mobileDesign ? 18 : 25,
-              height: mobileDesign ? 18 : 25,
-            ),
-          ],
-        ),
+        HorizontalTabHeading(title: 'SLIDE THROUGH YOUR DAY'),
 
         const SizedBox(height: 8),
 
@@ -523,21 +534,13 @@ Right food at the Right time?
           height: mobileDesign ? 72 : 82,
           child: TabBar(
             controller: _tabController,
-
             isScrollable: true,
-
             padding: EdgeInsets.zero,
-
             labelPadding: const EdgeInsets.symmetric(horizontal: 3.5),
-
             tabAlignment: TabAlignment.start,
-
             indicator: const BoxDecoration(),
-
             dividerColor: Colors.transparent,
-
             overlayColor: WidgetStateProperty.all(Colors.transparent),
-
             splashFactory: NoSplash.splashFactory,
 
             onTap: (index) {
@@ -545,7 +548,7 @@ Right food at the Right time?
             },
 
             tabs: List.generate(gutClockItems.length, (index) {
-              return _buildTab(index, mobileDesign);
+              return _buildTab(index, mobileDesign, allProducts);
             }),
           ),
         ),
@@ -557,19 +560,16 @@ Right food at the Right time?
   // CUSTOM TAB
   // ===============================================================
 
-  Widget _buildTab(int index, bool mobileDesign) {
+  Widget _buildTab(int index, bool mobileDesign, List<Products> allProducts) {
     final item = gutClockItems[index];
 
     final active = selected == index;
-
-    final tabColor = item.tabColor;
+    final tabColor = _getCategoryColor(item.food, allProducts);
 
     const Color commonYellow = gTabBackGroundColor;
 
     final double tabWidth = mobileDesign ? 177 : 205;
-
     final double tabHeight = mobileDesign ? 72 : 82;
-
     final double imageWidth = mobileDesign ? 62 : 72;
 
     return GestureDetector(
@@ -846,6 +846,15 @@ Right food at the Right time?
         }
 
         // ============================================================
+        // DYNAMIC SELECTED CATEGORY COLOR
+        // ============================================================
+
+        final selectedFood = gutClockItems[selected].food;
+
+        final selectedCategoryColor =
+        _getCategoryColor(selectedFood, products);
+
+        // ============================================================
         // ARROW / SPACING
         // ============================================================
 
@@ -858,63 +867,68 @@ Right food at the Right time?
         // ============================================================
 
         final double carouselWidth =
-            constraints.maxWidth - (arrowWidth * 2) - (arrowGap * 2);
+            constraints.maxWidth -
+                (arrowWidth * 2) -
+                (arrowGap * 2);
 
         // Two cards visible.
-        final double cardWidth = (carouselWidth - cardSpacing) / 2;
+        final double cardWidth =
+            (carouselWidth - cardSpacing) / 2;
 
         // ============================================================
         // CARD HEIGHT
         // ============================================================
 
-        final double imageHeight = cardWidth * imageHeightMultiplier;
+        final double imageHeight =
+            cardWidth * imageHeightMultiplier;
 
         final double textBlockHeight =
             contentPadding +
-            (titleSize * 1.3 * (titleTwoLines ? 2 : 1)) +
-            rowGap1 +
-            (priceSize * 1.3) +
-            rowGap2 +
-            (infoSize * 1.3);
+                (titleSize *
+                    1.3 *
+                    (titleTwoLines ? 2 : 1)) +
+                rowGap1 +
+                (priceSize * 1.3) +
+                rowGap2 +
+                (infoSize * 1.3);
 
-        final double buttonSectionHeight = buttonHeight + contentPadding * 2;
+        final double buttonSectionHeight =
+            buttonHeight + contentPadding * 2;
 
         final double cardHeight =
             imageHeight +
-            textBlockHeight +
-            gapBeforeButton +
-            buttonSectionHeight;
+                textBlockHeight +
+                gapBeforeButton +
+                buttonSectionHeight;
 
         return SizedBox(
           height: cardHeight,
-
           child: Row(
             children: [
               // ======================================================
               // LEFT ARROW
               // ======================================================
+
               SizedBox(
                 width: arrowWidth,
                 child: Center(
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    splashRadius: 18,
-
-                    onPressed: products.length > 2
+                  child: GestureDetector(
+                    onTap: products.length > 2
                         ? () {
-                            _productCarouselController.previousPage(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                            );
-                          }
+                      _productCarouselController.previousPage(
+                        duration:
+                        const Duration(milliseconds: 400),
+                        curve: Curves.easeOutCubic,
+                      );
+                    }
                         : null,
+                    child: Image.asset(
+                      'assets/images/left_arrow.png',
+                      height: 3.h,
+                      fit: BoxFit.contain,
 
-                    icon: Icon(
-                      Icons.chevron_left_rounded,
-                      color: products.length > 2
-                          ? gPrimaryColor
-                          : gPrimaryColor.withValues(alpha: .25),
-                      size: mobileDesign ? 25 : 30,
+                      // Dynamic category color
+                      color: selectedCategoryColor,
                     ),
                   ),
                 ),
@@ -925,25 +939,40 @@ Right food at the Right time?
               // ======================================================
               // CAROUSEL
               // ======================================================
+
               Expanded(
                 child: CarouselSlider.builder(
-                  carouselController: _productCarouselController,
+                  carouselController:
+                  _productCarouselController,
 
                   itemCount: products.length,
 
-                  itemBuilder: (context, index, realIndex) {
+                  itemBuilder: (
+                      context,
+                      index,
+                      realIndex,
+                      ) {
                     final product = products[index];
+
+                    // ==================================================
+                    // EACH PRODUCT'S OWN CATEGORY COLOR
+                    // ==================================================
+
+                    final Color productCategoryColor =
+                        product.category?.color ??
+                            gPrimaryColor;
 
                     return SizedBox(
                       width: cardWidth,
                       height: cardHeight,
-
                       child: ProductCard(
-                        key: ValueKey('${product.productTitle}_$index'),
-
+                        key: ValueKey(
+                          '${product.productTitle}_$index',
+                        ),
                         item: product,
 
-                        category: gutClockItems[selected].tabColor,
+                        // Dynamic per-product category color
+                        category: productCategoryColor,
 
                         cardWidth: cardWidth,
                       ),
@@ -956,16 +985,13 @@ Right food at the Right time?
                     // ==================================================
                     // EXACTLY 2 FULL PRODUCTS
                     // ==================================================
+
                     viewportFraction: 0.5,
 
-                    // ==================================================
-                    // CONTINUOUS HORIZONTAL SCROLL
-                    // ==================================================
                     scrollDirection: Axis.horizontal,
 
                     autoPlay: false,
 
-                    // Move ONE product at a time.
                     pageSnapping: true,
 
                     enlargeCenterPage: false,
@@ -974,8 +1000,8 @@ Right food at the Right time?
 
                     enableInfiniteScroll: false,
 
-                    // Allows manual continuous swipe.
-                    scrollPhysics: const ClampingScrollPhysics(),
+                    scrollPhysics:
+                    const ClampingScrollPhysics(),
                   ),
                 ),
               ),
@@ -985,28 +1011,27 @@ Right food at the Right time?
               // ======================================================
               // RIGHT ARROW
               // ======================================================
+
               SizedBox(
                 width: arrowWidth,
                 child: Center(
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    splashRadius: 18,
-
-                    onPressed: products.length > 2
+                  child: GestureDetector(
+                    onTap: products.length > 2
                         ? () {
-                            _productCarouselController.nextPage(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                            );
-                          }
+                      _productCarouselController.nextPage(
+                        duration:
+                        const Duration(milliseconds: 400),
+                        curve: Curves.easeOutCubic,
+                      );
+                    }
                         : null,
+                    child: Image.asset(
+                      'assets/images/right_arrow.png',
+                      height: 3.h,
+                      fit: BoxFit.contain,
 
-                    icon: Icon(
-                      Icons.chevron_right_rounded,
-                      color: products.length > 2
-                          ? gPrimaryColor
-                          : gPrimaryColor.withValues(alpha: .25),
-                      size: mobileDesign ? 25 : 30,
+                      // Dynamic category color
+                      color: selectedCategoryColor,
                     ),
                   ),
                 ),
@@ -1017,7 +1042,6 @@ Right food at the Right time?
       },
     );
   }
-
   // ===============================================================
   // LAUNCHING SOON
   // ===============================================================
@@ -1045,113 +1069,109 @@ Right food at the Right time?
   // ===============================================================
 
   Widget _buildExploreButton(GutClockItem item, bool mobileDesign) {
+    final productsProvider = context.watch<ProductsProvider>();
+
+    String normalizeCategoryName(String value) {
+      return value
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+
+    final foodName = normalizeCategoryName(item.food);
+
+    final matchingProduct =
+        productsProvider.additionalProducts.where((product) {
+          final categoryName =
+          normalizeCategoryName(product.category?.name ?? '');
+
+          // Exact match
+          if (categoryName == foodName) {
+            return true;
+          }
+
+          // Healthy Indulgence / Healthy Indulgences
+          if (foodName == 'healthy indulgence' &&
+              categoryName == 'healthy indulgences') {
+            return true;
+          }
+
+          if (foodName == 'healthy indulgences' &&
+              categoryName == 'healthy indulgence') {
+            return true;
+          }
+
+          return false;
+        }).firstOrNull;
+
+    // Same category color used by the product cards.
+    final Color categoryColor =
+        matchingProduct?.category?.color ?? gPrimaryColor;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: .92, end: 1),
-
       duration: const Duration(milliseconds: 700),
-
       curve: Curves.easeOutBack,
-
       builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
+        return Transform.scale(
+          scale: value,
+          child: child,
+        );
       },
-
       child: ElevatedButton(
         onPressed: () async {
-          // =========================================================
-          // FIND CATEGORY FROM FOOD NAME
-          // =========================================================
-
-          final productsProvider = context.read<ProductsProvider>();
-
-          final foodName = item.food.trim().toLowerCase();
-
-          final matchingProduct = productsProvider.additionalProducts.where((
-            product,
-          ) {
-            final categoryName = (product.category?.name ?? '')
-                .trim()
-                .toLowerCase();
-
-            return categoryName == foodName;
-          }).firstOrNull;
-
           final categoryId = matchingProduct?.category?.id;
 
           debugPrint('========================================');
-
           debugPrint('Gut Clock Explore');
-
           debugPrint('Selected Food : ${item.food}');
-
           debugPrint(
-            'Category Name : '
-            '${matchingProduct?.category?.name}',
+            'Category Name : ${matchingProduct?.category?.name}',
           );
-
           debugPrint('Category ID   : $categoryId');
-
+          debugPrint('Category Color: $categoryColor');
           debugPrint('========================================');
 
-          // =========================================================
           // CATEGORY NOT FOUND
-          // =========================================================
-
           if (categoryId == null) {
             debugPrint(
-              'Category ID not found '
-              'for ${item.food}',
+              'Category ID not found for ${item.food}',
             );
-
             return;
           }
 
-          // =========================================================
           // SAVE CATEGORY
-          // =========================================================
-
           final prefs = AppConfig().preferences;
 
-          await prefs?.setString('selectedCategory', categoryId.toString());
+          await prefs?.setString(
+            'selectedCategory',
+            categoryId.toString(),
+          );
 
           debugPrint(
             'Saved selectedCategory = '
-            '${prefs?.getString("selectedCategory")}',
+                '${prefs?.getString("selectedCategory")}',
           );
 
-          // =========================================================
           // ARCHIVED
-          // =========================================================
-
           if (matchingProduct?.isArchived?.toString().trim() == '1') {
             context.go('/launching');
-
             return;
           }
 
-          // =========================================================
-          // FOOD FARMACY
-          // =========================================================
+          final shopProvider = context.read<ShopProvider>();
 
-          if (categoryId == 32) {
-            final shopProvider = context.read<ShopProvider>();
+          shopProvider.openFooterCategory(categoryId);
 
-            shopProvider.changeTab(1);
-
-            context.go('/');
-
-            return;
-          }
-
-          // =========================================================
-          // OTHER CATEGORIES
-          // =========================================================
-
-          context.go('/category/$categoryId');
+          // Go back to dashboard.
+          context.go('/');
         },
 
         style: ElevatedButton.styleFrom(
-          backgroundColor: gPrimaryColor,
+          // ⭐ SAME CATEGORY COLOR
+          backgroundColor: categoryColor,
 
           elevation: 2,
 
@@ -1167,12 +1187,13 @@ Right food at the Right time?
 
         child: Text(
           'Explore '
-          '${capitalizeFirstLetter(item.food)}',
-
+              '${capitalizeFirstLetter(item.food)}',
           style: TextStyle(
             fontFamily: 'Caveat',
             fontSize: fontSize14,
             fontWeight: FontWeight.w700,
+
+            // Keep your existing text color.
             color: gMainColor,
           ),
         ),

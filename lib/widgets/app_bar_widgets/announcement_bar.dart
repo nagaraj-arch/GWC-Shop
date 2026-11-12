@@ -35,7 +35,7 @@ class AnnouncementBar extends StatelessWidget {
 
     return Container(
       height: isDesktop ? 40 : 34,
-      color: Color(0xffC41a0f),
+      color: gPrimaryColor,
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 20 : 12,
       ),

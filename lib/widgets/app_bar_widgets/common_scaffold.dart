@@ -40,13 +40,13 @@ class CommonScaffold extends StatelessWidget {
       child: Scaffold(
         backgroundColor: gBgColor,
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(
-            responsive.isDesktop ? 8.h : 14.h,
-          ),
+          preferredSize: Size.fromHeight(responsive.isDesktop ? 8.h : 14.h),
           child: Container(
             height: responsive.isDesktop ? 8.h : 14.h,
             padding: EdgeInsets.symmetric(
-                vertical: 1.h, horizontal: isDesktop ? 5.w : 3.w),
+              vertical: 1.h,
+              horizontal: isDesktop ? 5.w : 3.w,
+            ),
             decoration: isDesktop
                 ? const BoxDecoration(color: gWhiteColor)
                 : BoxDecoration(
@@ -57,8 +57,9 @@ class CommonScaffold extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            gBlackColor.withAlpha(AlphaHelper.fromOpacity(0.1)),
+                        color: gBlackColor.withAlpha(
+                          AlphaHelper.fromOpacity(0.1),
+                        ),
                         blurRadius: 8,
                         offset: const Offset(0, 4), // Shadow position
                       ),
@@ -66,79 +67,75 @@ class CommonScaffold extends StatelessWidget {
                   ),
             child: isMain
                 ? (isDesktop
-                    ? Row(
-                        children: [
-                          Image.asset(
-                            "assets/images/progress_logo.png",
-                            height: 5.h,
-                          ),
-                          SizedBox(width: 1.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Products By Gut Wellness Club",
-                                style: TextStyle(
-                                  fontFamily: kFontBold,
-                                  fontSize: fontSize14,
-                                  color: gBlackColor,
-                                ),
-                              ),
-                              Text(
-                                "v.1.2.1",
-                                style: TextStyle(
-                                  fontFamily: kFontBook,
-                                  color: gGreyColor,
-                                  fontSize: 8.dp,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: 2.w),
-                          Expanded(
-                            child: buildSearchField(context),
-                          ),
-                          SizedBox(width: 1.w),
-                          buildTrackerButton(),
-                          SizedBox(width: 1.w),
-                          if (isCart) const CartIconWidget(),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                "assets/images/progress_logo.png",
-                                height: 4.h,
-                              ),
-                              SizedBox(width: 2.w),
-                              Expanded(
-                                child: Text(
+                      ? Row(
+                          children: [
+                            Image.asset(
+                              "assets/images/progress_logo.png",
+                              height: 5.h,
+                            ),
+                            SizedBox(width: 1.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
                                   "Products By Gut Wellness Club",
                                   style: TextStyle(
                                     fontFamily: kFontBold,
-                                    fontSize: fontSize11,
+                                    fontSize: fontSize14,
+                                    color: gBlackColor,
                                   ),
                                 ),
-                              ),
-                              if (isCart) const CartIconWidget(),
-                            ],
-                          ),
-                          SizedBox(height: 1.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: buildSearchField(context),
-                              ),
-                              SizedBox(width: 2.w),
-                              buildTrackerButton(),
-                            ],
-                          ),
-                        ],
-                      ))
+                                Text(
+                                  "v.1.2.1",
+                                  style: TextStyle(
+                                    fontFamily: kFontBook,
+                                    color: gGreyColor,
+                                    fontSize: 8.dp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(width: 2.w),
+                            Expanded(child: buildSearchField(context)),
+                            SizedBox(width: 1.w),
+                            buildTrackerButton(),
+                            SizedBox(width: 1.w),
+                            if (isCart) const CartIconWidget(),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  "assets/images/progress_logo.png",
+                                  height: 4.h,
+                                ),
+                                SizedBox(width: 2.w),
+                                Expanded(
+                                  child: Text(
+                                    "Products By Gut Wellness Club",
+                                    style: TextStyle(
+                                      fontFamily: kFontBold,
+                                      fontSize: fontSize11,
+                                    ),
+                                  ),
+                                ),
+                                if (isCart) const CartIconWidget(),
+                              ],
+                            ),
+                            SizedBox(height: 1.h),
+                            Row(
+                              children: [
+                                Expanded(child: buildSearchField(context)),
+                                SizedBox(width: 2.w),
+                                buildTrackerButton(),
+                              ],
+                            ),
+                          ],
+                        ))
                 : Row(
                     children: [
                       InkWell(
@@ -217,13 +214,8 @@ class CommonScaffold extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: gPrimaryColor,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }
@@ -233,22 +225,17 @@ class ProductsHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final bool showVersion;
 
-  const ProductsHeader({
-    super.key,
-    this.onBack,
-    this.showVersion = false,
-  });
+  const ProductsHeader({super.key, this.onBack, this.showVersion = false});
 
   @override
   Widget build(BuildContext context) {
     final responsive = ResponsiveHelper(context);
     final isDesktop = responsive.isDesktop;
 
-    final version = "v.1.1.7";
+    final version = "v.1.4.3";
 
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 3.w : 3.w, vertical: 2.h),
+      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 2.h),
       decoration: const BoxDecoration(
         color: gWhiteColor,
         border: Border(bottom: BorderSide(color: borderColor)),
@@ -277,7 +264,6 @@ class ProductsHeader extends StatelessWidget {
                   SizedBox(width: .8.w),
                   const CartIconWidget(),
                 ],
-
               ],
             )
           : Column(
@@ -338,9 +324,7 @@ class ProductsHeader extends StatelessWidget {
                   SizedBox(height: 1.5.h),
                   Row(
                     children: [
-                      Expanded(
-                        child: searchWidget(false),
-                      ),
+                      Expanded(child: searchWidget(false)),
                       SizedBox(width: 2.w),
                       const FloatingButtonWidget(),
                       SizedBox(width: 2.w),
@@ -357,10 +341,7 @@ class ProductsHeader extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          "assets/images/progress_logo.png",
-          height: 5.h,
-        ),
+        Image.asset("assets/images/progress_logo.png", height: 5.h),
         SizedBox(width: 1.w),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

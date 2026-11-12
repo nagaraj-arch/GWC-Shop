@@ -151,23 +151,36 @@ class CustomTextField extends StatelessWidget {
             fontSize: fontSize10,
             fontWeight: FontWeight.w400,
           ),
+          alignLabelWithHint: true,
           filled: true,
           fillColor: effectiveFillColor,
 
           prefixIcon: prefixIcon != null
-              ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(
-              prefixIcon,
-              size: 2.5.h,
-              color: iconColor,
+              ? SizedBox(
+            width: 44,
+            height: maxLength > 1 ? 80 : 48,
+            child: Align(
+              alignment: maxLength > 1
+                  ? Alignment.topCenter
+                  : Alignment.center,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: maxLength > 1 ? 6 : 0,
+                ),
+                child: Icon(
+                  prefixIcon,
+                  size: 2.2.h,
+                  color: iconColor,
+                ),
+              ),
             ),
           )
               : null,
 
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 0,
-            minHeight: 0,
+          prefixIconConstraints: BoxConstraints(
+            minWidth: prefixIcon != null ? 44 : 0,
+            minHeight: maxLength > 1 ? 80 : 48,
+            maxWidth: 44,
           ),
 
           suffixIcon: suffixWidget ??
@@ -228,8 +241,10 @@ class CustomTextField extends StatelessWidget {
           ),
 
           isDense: true,
-          contentPadding:
-          EdgeInsets.symmetric(horizontal: contentPadding, vertical: contentHeight.h),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: contentPadding,
+            vertical: maxLength > 1 ? 1.5.h : contentHeight.h,
+          ),
         ),
       ),
     );

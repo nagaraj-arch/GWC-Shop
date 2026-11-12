@@ -52,17 +52,28 @@ class _CategoryCardState extends State<CategoryCard> {
       return;
     }
 
-    // ✅ Food Farmacy
-    if (widget.item.id == 32) {
+    if (widget.item.id != null) {
       final shopProvider = context.read<ShopProvider>();
 
-      shopProvider.changeTab(1);
+      shopProvider.openFooterCategory(widget.item.id!);
+
+      // Go back to dashboard.
+      // Dashboard will automatically open AllProductsTab
+      // because ShopProvider.selectedTab is set to 1.
       context.go('/');
-      return;
     }
 
-    // ✅ Other categories
-    context.go('/category/${widget.item.id}');
+    // // ✅ Food Farmacy
+    // if (widget.item.id == 32) {
+    //   final shopProvider = context.read<ShopProvider>();
+    //
+    //   shopProvider.changeTab(1);
+    //   context.go('/');
+    //   return;
+    // }
+    //
+    // // ✅ Other categories
+    // context.go('/category/${widget.item.id}');
   }
 
   @override

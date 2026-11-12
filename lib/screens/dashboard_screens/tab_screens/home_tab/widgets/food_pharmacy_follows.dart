@@ -1,9 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../../controllers/models/shop_models/get_cluster_list_model.dart';
@@ -14,6 +14,7 @@ import '../../../../../../utils/responsive_helper.dart';
 import '../../../../../utils/app_config.dart';
 import '../../../../category_page/category_product_card.dart';
 import '../../../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
+import '../../../widgets/horizontal_tab_heading.dart';
 
 class FoodFarmacyFollows extends StatefulWidget {
   const FoodFarmacyFollows({super.key});
@@ -28,7 +29,15 @@ class _FoodFarmacyFollowsState extends State<FoodFarmacyFollows>
   // CONSTANT COLOR
   // ===============================================================
 
-  static const Color tabColor = Color(0xff08716D);
+  Color _getCategory32Color() {
+    final provider = context.read<ShopProvider>();
+
+    final category = provider.allCategories
+        .where((item) => item.id == 32)
+        .firstOrNull;
+
+    return category?.color ?? gPrimaryColor;
+  }
 
   // ===============================================================
   // STATE
@@ -157,7 +166,7 @@ class _FoodFarmacyFollowsState extends State<FoodFarmacyFollows>
     final mobileDesign = res.isMobile || res.isTablet;
     final provider = context.watch<ShopProvider>();
     final clusters = provider.clusterList;
-
+    final Color category32Color = _getCategory32Color();
     // ============================================================
     // LOADING
     // ============================================================
@@ -206,9 +215,9 @@ class _FoodFarmacyFollowsState extends State<FoodFarmacyFollows>
             ),
           ),
           SizedBox(height: mobileDesign ? 20 : 30),
-          _buildHorizontalTabs(clusters, mobileDesign),
+          _buildHorizontalTabs(clusters, mobileDesign, category32Color),
           SizedBox(height: mobileDesign ? 18 : 28),
-          _buildSelectedDetails(selectedCluster, products, mobileDesign),
+          _buildSelectedDetails(selectedCluster, products, mobileDesign, category32Color),
         ],
       ),
     );
@@ -218,21 +227,18 @@ class _FoodFarmacyFollowsState extends State<FoodFarmacyFollows>
   // HEADER
   // ===============================================================
   Widget _buildHeader(bool mobileDesign) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final titleSize = (screenWidth * 0.065).clamp(20.0, 60.0);
-    final bodySize = (screenWidth * 0.014).clamp(14.0, 22.0);
 
     const title = '''
-<h1 style="font-family:'Archivo Narrow'; font-weight:600;">
+<h1 style="font-family:'Archivo Narrow'; font-weight:700;">
 Is Your Gut out of Rhythm?
 </h1>
 ''';
 
     const description = '''
-<p style="font-family:'Courier Prime'; font-style:italic; color:#786f68;">
+<p style="font-family:'Courier Prime'; font-style:italic; color:#514A45;">
 We curated Food Only Combination that can fix it!<br/>
 Your gut just wants
-<span style="color:#C41A0F;">
+<span style="color:#C10D02; font-family:'Courier Prime'; font-weight:800; font-style:italic;">
 Right support NOT Harsh chemicals.
 </span>
 </p>
@@ -254,14 +260,13 @@ Right support NOT Harsh chemicals.
                       element.localName == 'span' ||
                       element.localName == 'div') {
                     return {
-                      'font-size': '${titleSize}px',
                       'line-height': '0.9',
                       'letter-spacing': '-2px',
                     };
                   }
                   return null;
                 },
-                textStyle: const TextStyle(height: 1),
+                textStyle: TextStyle(height: 1,fontSize: fontSize14),
               ),
               SizedBox(height: mobileDesign ? 8 : 12),
               HtmlWidget(
@@ -270,11 +275,10 @@ Right support NOT Harsh chemicals.
                   if (element.localName == 'p' ||
                       element.localName == 'span' ||
                       element.localName == 'div') {
-                    return {'font-size': '${bodySize}px'};
                   }
                   return null;
                 },
-                textStyle: const TextStyle(height: 1.31, letterSpacing: 1.5),
+                textStyle: TextStyle(fontSize: fontSize12,height: 1.31, letterSpacing: 1.5),
               ).animate().fade(delay: 300.ms).slideY(begin: .15),
             ],
           ),
@@ -289,9 +293,7 @@ Right support NOT Harsh chemicals.
               return Transform.scale(scale: value, child: child);
             },
             child: Image.asset(
-              'assets/images/suitability.png',
-              width: mobileDesign ? 80 : 125,
-              height: mobileDesign ? 80 : 125,
+              'assets/images/gut_clock_rhythm.png',
               fit: BoxFit.contain,
             ),
           ),
@@ -303,7 +305,11 @@ Right support NOT Harsh chemicals.
   // ===============================================================
   // HORIZONTAL TABS
   // ===============================================================
-  Widget _buildHorizontalTabs(List<ClusterList> clusters, bool mobileDesign) {
+  Widget _buildHorizontalTabs(
+    List<ClusterList> clusters,
+    bool mobileDesign,
+    Color category32Color,
+  ) {
     final controller = _tabController;
 
     if (controller == null) {
@@ -312,27 +318,7 @@ Right support NOT Harsh chemicals.
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'WHAT FEELS OUT OF RHYTHM',
-              style: TextStyle(
-                fontFamily: "Courier Prime",
-                fontSize: fontSize13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: .4,
-                color: gMainColor,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Image.asset(
-              'assets/images/slider_right_arrow.png',
-              width: mobileDesign ? 18 : 25,
-              height: mobileDesign ? 18 : 25,
-            ),
-          ],
-        ),
+        HorizontalTabHeading(title: 'WHAT FEELS OUT OF RHYTHM'),
         const SizedBox(height: 8),
         SizedBox(
           height: mobileDesign ? 82 : 92,
@@ -348,7 +334,12 @@ Right support NOT Harsh chemicals.
             splashFactory: NoSplash.splashFactory,
             onTap: null,
             tabs: List.generate(clusters.length, (index) {
-              return _buildTab(clusters[index], index, mobileDesign);
+              return _buildTab(
+                clusters[index],
+                index,
+                mobileDesign,
+                category32Color,
+              );
             }),
           ),
         ),
@@ -360,9 +351,17 @@ Right support NOT Harsh chemicals.
   // TAB
   // ===============================================================
 
-  Widget _buildTab(ClusterList cluster, int index, bool mobileDesign) {
+  Widget _buildTab(
+    ClusterList cluster,
+    int index,
+    bool mobileDesign,
+    Color category32Color,
+  ) {
     final active = selected == index;
     const Color commonYellow = gTabBackGroundColor;
+
+    final Color tabColor = category32Color;
+
     final tabWidth = mobileDesign ? 177.0 : 205.0;
     final tabHeight = mobileDesign ? 72.0 : 82.0;
     final imageWidth = mobileDesign ? 62.0 : 72.0;
@@ -461,6 +460,7 @@ Right support NOT Harsh chemicals.
     ClusterList cluster,
     List<Products> products,
     bool mobileDesign,
+      Color category32Color,
   ) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 450),
@@ -477,7 +477,11 @@ Right support NOT Harsh chemicals.
             _buildStory(cluster, mobileDesign),
             SizedBox(height: 10),
             if (products.isNotEmpty)
-              _buildProducts(products, mobileDesign)
+      _buildProducts(
+      products,
+      mobileDesign,
+      category32Color,
+    )
             else
               _buildLaunchingSoon(mobileDesign),
             SizedBox(height: 30),
@@ -513,7 +517,8 @@ Right support NOT Harsh chemicals.
                 fontFamily: "Courier Prime",
                 fontSize: fontSize13,
                 fontWeight: FontWeight.w700,
-                color: gPrimaryColor,height: 0
+                color: gPrimaryColor,
+                height: 0,
               ),
             ),
           HtmlWidget(
@@ -538,7 +543,11 @@ Right support NOT Harsh chemicals.
   // PRODUCTS
   // ===============================================================
 
-  Widget _buildProducts(List<Products> products, bool mobileDesign) {
+  Widget _buildProducts(
+    List<Products> products,
+    bool mobileDesign,
+    Color category32Color,
+  ) {
     if (products.isEmpty) {
       return _buildLaunchingSoon(mobileDesign);
     }
@@ -656,12 +665,10 @@ Right support NOT Harsh chemicals.
                 width: arrowWidth,
 
                 child: Center(
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
 
-                    splashRadius: 18,
-
-                    onPressed: products.length > 2
+                    onTap: products.length > 2
                         ? () {
                             _productCarouselController.previousPage(
                               duration: const Duration(milliseconds: 400),
@@ -670,14 +677,14 @@ Right support NOT Harsh chemicals.
                           }
                         : null,
 
-                    icon: Icon(
-                      Icons.chevron_left_rounded,
+                    child: Opacity(
+                      opacity: products.length > 2 ? 1.0 : 0.25,
 
-                      color: products.length > 2
-                          ? gPrimaryColor
-                          : gPrimaryColor.withValues(alpha: .25),
-
-                      size: mobileDesign ? 25 : 30,
+                      child: Image.asset(
+                        'assets/images/left_arrow.png',
+                        height: 3.h,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -699,17 +706,12 @@ Right support NOT Harsh chemicals.
 
                     return SizedBox(
                       width: cardWidth,
-
                       height: cardHeight,
 
                       child: ProductCard(
                         key: ValueKey('${product.productTitle}_$index'),
-
                         item: product,
-
-                        // Always same color.
-                        category: tabColor,
-
+                        category: product.category?.color ?? category32Color,
                         cardWidth: cardWidth,
                       ),
                     );
@@ -748,12 +750,10 @@ Right support NOT Harsh chemicals.
                 width: arrowWidth,
 
                 child: Center(
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
 
-                    splashRadius: 18,
-
-                    onPressed: products.length > 2
+                    onTap: products.length > 2
                         ? () {
                             _productCarouselController.nextPage(
                               duration: const Duration(milliseconds: 400),
@@ -762,14 +762,14 @@ Right support NOT Harsh chemicals.
                           }
                         : null,
 
-                    icon: Icon(
-                      Icons.chevron_right_rounded,
+                    child: Opacity(
+                      opacity: products.length > 2 ? 1.0 : 0.25,
 
-                      color: products.length > 2
-                          ? gPrimaryColor
-                          : gPrimaryColor.withValues(alpha: .25),
-
-                      size: mobileDesign ? 25 : 30,
+                      child: Image.asset(
+                        'assets/images/right_arrow.png',
+                        height: 3.h,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -780,7 +780,6 @@ Right support NOT Harsh chemicals.
       },
     );
   }
-
   // ===============================================================
   // EXPLORE BUTTON
   // ===============================================================

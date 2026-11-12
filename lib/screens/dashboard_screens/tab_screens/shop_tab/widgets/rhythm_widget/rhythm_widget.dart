@@ -144,7 +144,7 @@ class _RhythmWidgetState extends State<RhythmWidget> {
 
     final desc = """
 <p style="font-family:'Courier Prime'; font-weight:400; font-size:inherit;font-style:italic;text-align: justify;"">
-  <span style="color:#786f68;">
+  <span style="color:#514A45;">
    Food-only products designed for the unique intervals<br/>
     your gut needs care— from morning active nourishment<br/>
      to a warm, comforting bowl at night.

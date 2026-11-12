@@ -7,20 +7,22 @@ class NetworkService {
   static final prefs = AppConfig().preferences;
 
   /// GET request with optional token
-  static Future<dynamic> get(String url, {bool useToken = true}) async {
+  static Future<dynamic> get(
+    String url, {
+    bool useToken = true,
+    bool showResponse = true,
+  }) async {
     try {
       debugPrint("GET URL: $url");
 
-      final headers = {
-        'Content-Type': 'application/json',
-      };
+      final headers = {'Content-Type': 'application/json'};
 
       final response = await http.get(Uri.parse(url), headers: headers);
 
-      debugPrint("GET Response: ${response.body}");
+      if (showResponse) debugPrint("GET Response: ${response.body}");
 
       if (response.statusCode == 200) {
-        debugPrint("GET Status: ${response.statusCode}");
+        if (showResponse) debugPrint("GET Status: ${response.statusCode}");
         return jsonDecode(response.body);
       } else {
         throw Exception('GET request failed: ${response.statusCode}');
@@ -31,8 +33,11 @@ class NetworkService {
   }
 
   /// POST request with optional token
-  static Future<dynamic> post(String url, Map<String, dynamic> body,
-      {bool useToken = true}) async {
+  static Future<dynamic> post(
+    String url,
+    Map<String, dynamic> body, {
+    bool useToken = true,
+  }) async {
     try {
       debugPrint("POST URL: $url");
       debugPrint("POST Body: $body");
@@ -53,7 +58,8 @@ class NetworkService {
       // Check if it was redirected
       if (streamedResponse.statusCode == 302 || streamedResponse.isRedirect) {
         throw Exception(
-            "Received redirect (302). Check API URL or server config.");
+          "Received redirect (302). Check API URL or server config.",
+        );
       }
 
       final response = await http.Response.fromStream(streamedResponse);
@@ -71,44 +77,3 @@ class NetworkService {
     }
   }
 }
-
-// class NetworkService {
-//   static Future<dynamic> get(String url) async {
-//     try {
-//       final response = await http.get(Uri.parse(url));
-//       debugPrint("GET $url");
-//       debugPrint("Status: ${response.statusCode}");
-//       debugPrint("Response: ${response.body}");
-//       if (response.statusCode == 200) {
-//         return jsonDecode(response.body);
-//       } else {
-//         throw Exception('GET request failed: ${response.statusCode}');
-//       }
-//     } catch (e) {
-//       throw Exception("GET error: $e");
-//     }
-//   }
-//
-//   static Future<dynamic> post(String url, Map<String, dynamic> body) async {
-//     try {
-//       debugPrint("POST $url");
-//       debugPrint("Body: $body");
-//       final response = await http.post(
-//         Uri.parse(url),
-//         headers: {'Content-Type': 'application/json'},
-//         body: jsonEncode(body),
-//       );
-//
-//       debugPrint("Status: ${response.statusCode}");
-//       debugPrint("Response: ${response.body}");
-//
-//       if (response.statusCode == 200) {
-//         return jsonDecode(response.body);
-//       } else {
-//         throw Exception('POST request failed: ${response.statusCode}');
-//       }
-//     } catch (e) {
-//       throw Exception("POST error: $e");
-//     }
-//   }
-// }

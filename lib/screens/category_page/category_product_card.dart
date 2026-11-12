@@ -18,10 +18,8 @@ class _CardSizing {
   final double buttonHeight;
   final double iconSize;
   final double contentPadding;
-  final double imageHeightMultiplier;
-  final bool titleTwoLines;
-  final double rowGap1; // between title row and price row
-  final double rowGap2; // between price row and "what's inside" row
+  final double rowGap1;
+  final double rowGap2;
   final double gapBeforeButton;
 
   const _CardSizing({
@@ -31,102 +29,26 @@ class _CardSizing {
     required this.buttonHeight,
     required this.iconSize,
     required this.contentPadding,
-    required this.imageHeightMultiplier,
-    required this.titleTwoLines,
     required this.rowGap1,
     required this.rowGap2,
     required this.gapBeforeButton,
   });
 
-  static _CardSizing forBreakpoint(ScreenSizeHelper responsive) {
-    if (responsive.isMobile) {
-      return const _CardSizing(
-        titleSize: 10.5,
-        priceSize: 10.5,
-        infoSize: 8.5,
-        buttonHeight: 30,
-        iconSize: 11,
-        contentPadding: 6,
-        imageHeightMultiplier: 0.78,
-        titleTwoLines: true,
-        rowGap1: 4,
-        rowGap2: 5,
-        gapBeforeButton: 8,
-      );
-    } else if (responsive.isTablet) {
-      return const _CardSizing(
-        titleSize: 12.5,
-        priceSize: 12,
-        infoSize: 10,
-        buttonHeight: 34,
-        iconSize: 14,
-        contentPadding: 8,
-        imageHeightMultiplier: 0.80,
-        titleTwoLines: false,
-        rowGap1: 6,
-        rowGap2: 8,
-        gapBeforeButton: 10,
-      );
-    } else if (responsive.isLaptop) {
-      return const _CardSizing(
-        titleSize: 15,
-        priceSize: 14,
-        infoSize: 12,
-        buttonHeight: 36,
-        iconSize: 16,
-        contentPadding: 10,
-        imageHeightMultiplier: 0.80,
-        titleTwoLines: false,
-        rowGap1: 6,
-        rowGap2: 8,
-        gapBeforeButton: 12,
-      );
-    } else if (responsive.isDesktop) {
-      return const _CardSizing(
-        titleSize: 16,
-        priceSize: 15,
-        infoSize: 13,
-        buttonHeight: 38,
-        iconSize: 16,
-        contentPadding: 10,
-        imageHeightMultiplier: 0.88,
-        titleTwoLines: false,
-        rowGap1: 6,
-        rowGap2: 8,
-        gapBeforeButton: 14,
-      );
-    } else {
-      return const _CardSizing(
-        titleSize: 17,
-        priceSize: 16,
-        infoSize: 14,
-        buttonHeight: 40,
-        iconSize: 18,
-        contentPadding: 12,
-        imageHeightMultiplier: 0.94,
-        titleTwoLines: false,
-        rowGap1: 6,
-        rowGap2: 8,
-        gapBeforeButton: 16,
-      );
-    }
+  factory _CardSizing.fromWidth(double width) {
+    final scale = (width / 220).clamp(0.75, 1.35);
+
+    return _CardSizing(
+      titleSize: (14 * scale).clamp(10.5, 18),
+      priceSize: (14 * scale).clamp(10.5, 17),
+      infoSize: (11 * scale).clamp(8.5, 14),
+      buttonHeight: (36 * scale).clamp(30, 44),
+      iconSize: (16 * scale).clamp(11, 20),
+      contentPadding: (9 * scale).clamp(6, 13),
+      rowGap1: (6 * scale).clamp(4, 8),
+      rowGap2: (7 * scale).clamp(5, 9),
+      gapBeforeButton: (10 * scale).clamp(6, 16),
+    );
   }
-
-  double imageHeight(double cardWidth) => cardWidth * imageHeightMultiplier;
-
-  // Height of the title/price/"what's inside" text block, using a
-  // 1.3x line-height approximation per row. A small buffer is folded in
-  // via the caller when computing mainAxisExtent, so minor rounding
-  // differences don't cause the Spacer below to overflow.
-  double get textBlockHeight =>
-      contentPadding +
-      (titleSize * 1.3 * (titleTwoLines ? 2 : 1)) +
-      rowGap1 +
-      (priceSize * 1.3) +
-      rowGap2 +
-      (infoSize * 1.3);
-
-  double get buttonSectionHeight => buttonHeight + contentPadding * 2;
 }
 
 class AdditionalProductsGrid extends StatelessWidget {
@@ -137,6 +59,8 @@ class AdditionalProductsGrid extends StatelessWidget {
   final bool mobileDesign;
   final bool showAllProducts;
 
+  final Widget? afterFirstRow;
+
   const AdditionalProductsGrid({
     super.key,
     required this.products,
@@ -144,17 +68,18 @@ class AdditionalProductsGrid extends StatelessWidget {
     this.isShop = false,
     this.mobileDesign = false,
     this.showAllProducts = false,
+    this.afterFirstRow,
   });
 
   @override
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
-    final sizing = _CardSizing.forBreakpoint(responsive);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
 
-        int count = responsive.isMobile
+        final int count = responsive.isMobile
             ? 2
             : responsive.isTablet
             ? 3
@@ -166,53 +91,138 @@ class AdditionalProductsGrid extends StatelessWidget {
             ? 6
             : 7;
 
-        final visibleProducts = mobileDesign && !showAllProducts
-            ? products.take(count).toList()
-            : products;
-
         final spacing = responsive.isMobile ? 20.0 : 40.0;
+
         final padding = responsive.isMobile || responsive.isTablet ? 0.0 : 0.0;
 
         final cardWidth = (width - padding * 2 - spacing * (count - 1)) / count;
+        final sizing = _CardSizing.fromWidth(cardWidth);
 
-        // Previously a fixed childAspectRatio was used, which makes
-        // cell height scale linearly with cardWidth — but only the
-        // product image should scale with card width; the text rows
-        // and button below it are roughly fixed-pixel regardless of
-        // card width. A static ratio can only match at one specific
-        // width, so as the window resized (even within one breakpoint
-        // tier, not just across tiers), the Column's Spacer had to
-        // absorb an ever-growing or shrinking gap. Computing the exact
-        // required height for the *current* cardWidth and using
-        // mainAxisExtent instead fixes this at every width, not just
-        // the handful originally eyeballed.
+        const imageAspectRatio = 1.15;
+
+        final imageHeight = cardWidth / imageAspectRatio;
+
         final mainAxisExtent =
-            sizing.imageHeight(cardWidth) +
-            sizing.textBlockHeight +
-            sizing.gapBeforeButton +
-            sizing.buttonSectionHeight;
+            imageHeight +
+                sizing.contentPadding * 2 +
+                sizing.titleSize * 1.35 * 2 +
+                sizing.rowGap1 +
+                sizing.priceSize * 1.35 +
+                sizing.rowGap2 +
+                sizing.infoSize * 1.35 +
+                sizing.gapBeforeButton +
+                sizing.buttonHeight +
+                sizing.contentPadding * 2;
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: padding),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: count,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing + 10,
-            mainAxisExtent: mainAxisExtent,
-          ),
-          itemCount: visibleProducts.length,
-          itemBuilder: (_, i) => ProductCard(
-            key: ValueKey(
-              '${visibleProducts[i].productTitle}_$i',
-            ),
-            item: visibleProducts[i],
-            category: isShop
-                ? visibleProducts[i].category?.color
-                : category,
-            cardWidth: cardWidth,
-          ),
+        // ============================================================
+// MOBILE + TABLET
+// ============================================================
+
+        if (mobileDesign) {
+          final int firstRowCount =
+          products.length > count ? count : products.length;
+
+          final firstRowProducts =
+          products.take(firstRowCount).toList();
+
+          final remainingProducts =
+          products.skip(firstRowCount).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ======================================================
+              // FIRST ROW
+              // ======================================================
+
+              if (firstRowProducts.isNotEmpty)
+                _buildGrid(
+                  products: firstRowProducts,
+                  count: count,
+                  spacing: spacing,
+                  padding: padding,
+                  cardWidth: cardWidth,
+                  mainAxisExtent: mainAxisExtent,
+                ),
+
+              // ======================================================
+              // MOBILE / TABLET SECTION
+              // ======================================================
+
+              if (afterFirstRow != null &&
+                  remainingProducts.isNotEmpty) ...[
+                const SizedBox(height: 20),
+
+                afterFirstRow!,
+
+                const SizedBox(height: 20),
+              ],
+
+              // ======================================================
+              // REMAINING PRODUCTS
+              // ======================================================
+
+              if (remainingProducts.isNotEmpty)
+                _buildGrid(
+                  products: remainingProducts,
+                  count: count,
+                  spacing: spacing,
+                  padding: padding,
+                  cardWidth: cardWidth,
+                  mainAxisExtent: mainAxisExtent,
+                ),
+            ],
+          );
+        }
+
+// ============================================================
+// LAPTOP / DESKTOP / BIG DEVICES
+// ============================================================
+
+// ALWAYS SHOW ALL PRODUCTS
+        return _buildGrid(
+          products: products,
+          count: count,
+          spacing: spacing,
+          padding: padding,
+          cardWidth: cardWidth,
+          mainAxisExtent: mainAxisExtent,
+        );
+      },
+    );
+  }
+
+  Widget _buildGrid({
+    required List<Products> products,
+    required int count,
+    required double spacing,
+    required double padding,
+    required double cardWidth,
+    required double mainAxisExtent,
+  }) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+
+      padding: EdgeInsets.symmetric(horizontal: padding),
+
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: count,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing + 10,
+        mainAxisExtent: mainAxisExtent,
+      ),
+
+      itemCount: products.length,
+
+      itemBuilder: (_, i) {
+        final product = products[i];
+
+        return ProductCard(
+          key: ValueKey('${product.productTitle}_$i'),
+          item: product,
+          category: isShop ? product.category?.color : category,
+          cardWidth: cardWidth,
         );
       },
     );
@@ -241,7 +251,10 @@ class _ProductCardState extends State<ProductCard> {
   @override
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
-    final sizing = _CardSizing.forBreakpoint(responsive);
+    final sizing = _CardSizing.fromWidth(widget.cardWidth);
+
+    const imageAspectRatio = 1.05;
+    final imageHeight = widget.cardWidth / imageAspectRatio;
 
     final titleSize = sizing.titleSize;
     final priceSize = sizing.priceSize;
@@ -249,7 +262,6 @@ class _ProductCardState extends State<ProductCard> {
     final buttonHeight = sizing.buttonHeight;
     final iconSize = sizing.iconSize;
     final contentPadding = sizing.contentPadding;
-    final imageHeight = sizing.imageHeight(widget.cardWidth);
 
     final orderQuantity =
         "${widget.item.itemQty}${widget.item.weightType?.unit}";
@@ -295,7 +307,9 @@ class _ProductCardState extends State<ProductCard> {
               /// IMAGE
               ThumbnailView(
                 context: context,
-                imageUrl: widget.item.productThumbnailsUrls?.first ?? "",
+                imageUrl:
+                // "assets/images/new_image.jpg",
+                widget.item.productThumbnailsUrls?.first ?? "",
                 enablePreview: false,
                 borderRadius: 8,
                 height: imageHeight,

@@ -6,6 +6,10 @@ import '../../../controllers/routers/app_router.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/responsive_helper.dart';
 
+class GlobalCartButtonVisibility {
+  static final ValueNotifier<bool> visible = ValueNotifier<bool>(true);
+}
+
 class GlobalCartButton extends StatefulWidget {
   const GlobalCartButton({super.key});
 
@@ -67,9 +71,7 @@ class _GlobalCartButtonState extends State<GlobalCartButton> {
     return Container(
       width: responsive.isDesktop
           ? 360
-          : responsive.isTablet
-          ? 340
-          : MediaQuery.of(context).size.width - 40,
+          : double.maxFinite,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(

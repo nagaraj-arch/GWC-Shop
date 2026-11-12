@@ -2,24 +2,25 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_sizer/flutter_sizer.dart';
-import 'package:go_router/go_router.dart';
-import 'package:gwc_shop/controllers/providers/shop_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'controllers/providers/cart_provider.dart';
 import 'controllers/providers/products_providers.dart';
+import 'controllers/providers/shop_provider.dart';
 import 'controllers/providers/track_my_order_provider.dart';
 import 'controllers/routers/app_router.dart';
+import 'controllers/routers/visitor_info_service.dart';
 import 'screens/product_screens/widgets/cart_button.dart';
 import 'utils/app_config.dart';
-import 'widgets/button_widgets/floating_shop_button.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final prefs = await SharedPreferences.getInstance();
   AppConfig().preferences = prefs;
+
+  await VisitorInfoService.collectVisitorInfo();
 
   debugPaintSizeEnabled = false;
   debugRepaintRainbowEnabled = false;
@@ -67,35 +68,30 @@ class _MyAppState extends State<MyApp> {
                     appRouter.routerDelegate.currentConfiguration.uri.path;
 
                 final isCartScreen = currentLocation == '/cart';
+                final mediaQuery = MediaQuery.of(context);
+                final isKeyboardOpen = mediaQuery.viewInsets.bottom > 0;
+                final isMobile = mediaQuery.size.width < 700;
 
-                return Stack(
-                  children: [
-                    // Main app content
-                    child ?? const SizedBox.shrink(),
-
-                    // 🛍️ Floating shop button
-                    // Hide on Cart screen
-
-                      // Positioned(
-                      //   bottom: 30,
-                      //   left: 40,
-                      //   child: SafeArea(
-                      //     child: FloatingShopButton(),
-                      //   ),
-                      // ),
-
-                    if (!isCartScreen)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 20,
-                      child: const SafeArea(
-                        child: Center(
-                          child: GlobalCartButton(),
-                        ),
-                      ),
-                    ),
-                  ],
+                return ValueListenableBuilder<bool>(
+                  valueListenable: GlobalCartButtonVisibility.visible,
+                  builder: (context, cartButtonVisible, _) {
+                    return Stack(
+                      children: [
+                        child ?? const SizedBox.shrink(),
+                        // if (cartButtonVisible && !isCartScreen && !isKeyboardOpen)
+                        //   Positioned(
+                        //     left: 0,
+                        //     right: 0,
+                        //     bottom: isMobile ? 100 : 20,
+                        //     child: SafeArea(
+                        //       child: Center(
+                        //         child: GlobalCartButton(),
+                        //       ),
+                        //     ),
+                        //   ),
+                      ],
+                    );
+                  },
                 );
               },
             ),

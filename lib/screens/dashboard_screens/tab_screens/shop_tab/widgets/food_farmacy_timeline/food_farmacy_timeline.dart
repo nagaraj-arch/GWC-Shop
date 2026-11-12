@@ -128,10 +128,10 @@ Is Your Gut out of Rhythm?
 
     final desc = """
 <p style="font-family:'Courier Prime'; font-weight:400; font-size:inherit; font-style:italic;"
-  "color:#786f68;">
+  "color:#514A45;">
    We curated Food Only Combination that can fix it!<br/>
    Your gut just wants
-<span style="color:#C41A0F; font-family:'Courier Prime'; font-weight:400; font-style:italic;">
+<span style="color:#C10D02; font-family:'Courier Prime'; font-weight:800; font-style:italic;">
      Right support NOT Harsh chemicals.
   </span>
   </span>

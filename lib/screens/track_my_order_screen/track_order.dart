@@ -15,6 +15,7 @@ import '../../controllers/providers/track_my_order_provider.dart';
 import '../../utils/common_utils.dart';
 import '../../widgets/app_bar_widgets/common_scaffold.dart';
 import '../../widgets/button_widgets/button_widget.dart';
+import '../../widgets/common_empty_state.dart';
 import '../../widgets/container_widgets/common_card.dart';
 import '../../widgets/container_widgets/common_divider.dart';
 import '../../widgets/loading_widgets/loading_indicator.dart';
@@ -44,7 +45,9 @@ class _TrackOrderState extends State<TrackOrder> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    final res = ScreenSizeHelper(context);
+
+    final mobileDesign = res.isMobile || res.isTablet;
 
     final provider = context.watch<TrackMyOrderProvider>();
 
@@ -57,11 +60,12 @@ class _TrackOrderState extends State<TrackOrder> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ProductsHeader(onBack: () => context.go('/')),
+          mobileDesign ? SizedBox():   ProductsHeader(onBack: () => context.go('/')),
             Expanded(
               child: Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: isDesktop ? 20.w : 3.w),
+                padding: EdgeInsets.symmetric(
+                  horizontal: mobileDesign ? 3.w : 20.w,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -69,8 +73,9 @@ class _TrackOrderState extends State<TrackOrder> {
                       color: gWhiteColor,
                       elevation: 2,
                       margin: EdgeInsets.symmetric(vertical: 2.h),
-                      shadowColor:
-                          gBlackColor.withAlpha(AlphaHelper.fromOpacity(0.8)),
+                      shadowColor: gBlackColor.withAlpha(
+                        AlphaHelper.fromOpacity(0.8),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: const BorderSide(color: borderColor, width: 1),
@@ -102,18 +107,21 @@ class _TrackOrderState extends State<TrackOrder> {
                                 contentHeight: 2,
                               ),
                             ),
-                            SizedBox(width: isDesktop ? 1.w : 2.w),
+                            SizedBox(width: mobileDesign ? 2.w : 1.w),
                             ButtonWidget(
                               text: "Search Orders",
-                              onPressed: (!isValid ||
-                                      provider
-                                          .isLoading(LoadingType.trackOrder))
+                              onPressed:
+                                  (!isValid ||
+                                      provider.isLoading(
+                                        LoadingType.trackOrder,
+                                      ))
                                   ? null // 🔥 THIS disables button
                                   : () async {
                                       await provider.getTrackOrder(context);
                                     },
-                              isLoading:
-                                  provider.isLoading(LoadingType.trackOrder),
+                              isLoading: provider.isLoading(
+                                LoadingType.trackOrder,
+                              ),
                               radius: 8,
                               color: isValid
                                   ? gBlackColor
@@ -125,11 +133,17 @@ class _TrackOrderState extends State<TrackOrder> {
                       ),
                     ),
                     Expanded(
-                        child: provider.isLoading(LoadingType.trackOrder)
-                            ? const Center(child: LoadingIndicator())
-                            : provider.trackList.isEmpty
-                                ? Center(child: emptyView())
-                                : mainView(provider, isDesktop)),
+                      child: provider.isLoading(LoadingType.trackOrder)
+                          ? const Center(child: LoadingIndicator())
+                          : provider.trackList.isEmpty
+                          ? const CommonEmptyState(
+                              icon: Icons.phone_android,
+                              title: "No Orders Found",
+                              subText:
+                                  "Enter a valid phone number to view your order history.",
+                            )
+                          : mainView(provider, mobileDesign),
+                    ),
                   ],
                 ),
               ),
@@ -140,53 +154,19 @@ class _TrackOrderState extends State<TrackOrder> {
     );
   }
 
-  emptyView() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        /// ICON CIRCLE
-        Container(
-          height: 80,
-          width: 80,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.phone_android,
-            color: Colors.grey,
-            size: 30,
-          ),
-        ),
 
-        SizedBox(height: 2.h),
-
-        /// TEXT
-        const Text(
-          "ENTER PHONE NUMBER TO\nVIEW ORDER HISTORY",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            letterSpacing: 3,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.black54,
-          ),
-        ),
-      ],
-    );
-  }
 
   final TextEditingController orderSearchController = TextEditingController();
 
   bool isExpanded = false;
   int expandedIndex = 0; // ✅ first item open by default
 
-  mainView(TrackMyOrderProvider provider, bool isDesktop) {
+  Widget mainView(TrackMyOrderProvider provider, bool mobileDesign) {
     final searchText = orderSearchController.text.toLowerCase();
 
     final filteredList = provider.trackList.where((order) {
-      final orderId =
-          (order.cfOrderId ?? order.razorpayOrderId ?? "").toLowerCase();
+      final orderId = (order.cfOrderId ?? order.razorpayOrderId ?? "")
+          .toLowerCase();
 
       return orderId.contains(searchText);
     }).toList();
@@ -204,15 +184,13 @@ class _TrackOrderState extends State<TrackOrder> {
                   color: gHintTextColor,
                 ),
                 children: [
-                  const TextSpan(
-                    text: "• DISPLAYING RESULTS FOR ",
-                  ),
+                  const TextSpan(text: "• DISPLAYING RESULTS FOR "),
                   TextSpan(
                     text: provider.phoneController.text,
                     style: TextStyle(
                       fontFamily: fontBold,
                       color: gPrimaryColor,
-                      fontSize: fontSize12,
+                      fontSize: mobileDesign ? fontSize10 : fontSize12,
                     ),
                   ),
                 ],
@@ -221,7 +199,7 @@ class _TrackOrderState extends State<TrackOrder> {
             CommonSearchBar(
               controller: orderSearchController,
               hintText: "Search by Order ID",
-              width: isDesktop ? 20 : 40,
+              width: mobileDesign ? 35 : 20,
               fillColor: gWhiteColor,
               borderColor: gBlackColor,
               onChanged: (value) {
@@ -289,7 +267,9 @@ class _OrderCardState extends State<OrderCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveHelper(context).isDesktop;
+    final res = ScreenSizeHelper(context);
+
+    final mobileDesign = res.isMobile || res.isTablet;
 
     final status = widget.order.additionalOrderDetails?.status?.trim();
 
@@ -335,10 +315,13 @@ class _OrderCardState extends State<OrderCard> {
                       : const Radius.circular(16),
                 ),
                 child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 1.5.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 1.5.h,
+                  ),
                   decoration: BoxDecoration(
-                    color: widget.order.additionalOrderDetails?.status !=
+                    color:
+                        widget.order.additionalOrderDetails?.status !=
                             "DELIVERED"
                         ? gPrimaryColor
                         : gBlackColor,
@@ -365,13 +348,14 @@ class _OrderCardState extends State<OrderCard> {
                       ),
 
                       /// STATUS
-
                       if (status != null &&
                           status.isNotEmpty &&
                           status.toLowerCase() != "null")
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: gWhiteColor.withAlpha(120),
                             borderRadius: BorderRadius.circular(20),
@@ -413,39 +397,47 @@ class _OrderCardState extends State<OrderCard> {
                     SizedBox(height: 2.h),
                     Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? 1.5.w : 3.w),
-                      child: isDesktop
-                          ? IntrinsicHeight(
+                        horizontal: mobileDesign ? 3.w : 1.5.w,
+                      ),
+                      child: mobileDesign
+                          ? Column(
+                        children: [
+                          _buildProductsCard(),
+                          const SizedBox(height: 16),
+                          _buildAddressCard(),
+                        ],
+                      ) : IntrinsicHeight(
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Expanded(
-                                      child: SizedBox(
-                                          height: double.infinity,
-                                          child: SizedBox.expand(
-                                              child: _buildProductsCard()))),
+                                    child: SizedBox(
+                                      height: double.infinity,
+                                      child: SizedBox.expand(
+                                        child: _buildProductsCard(),
+                                      ),
+                                    ),
+                                  ),
                                   const SizedBox(width: 18),
                                   Expanded(
-                                      child: SizedBox(
-                                          height: double.infinity,
-                                          child: SizedBox.expand(
-                                              child: _buildAddressCard()))),
+                                    child: SizedBox(
+                                      height: double.infinity,
+                                      child: SizedBox.expand(
+                                        child: _buildAddressCard(),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            )
-                          : Column(
-                              children: [
-                                _buildProductsCard(),
-                                const SizedBox(height: 16),
-                                _buildAddressCard(),
-                              ],
                             ),
                     ),
                     SizedBox(height: 2.h),
                     CommonDivider(verticalMargin: 0, opacity: 0.2),
                     CommonCard(
                       margin: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? 1.5.w : 2.w, vertical: 2.h),
+                        horizontal: mobileDesign ? 2.w : 1.5.w,
+                        vertical: 2.h,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -463,8 +455,9 @@ class _OrderCardState extends State<OrderCard> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                DateFormat("dd MMM, hh:mm a")
-                                    .format(widget.order.createdAt!),
+                                DateFormat(
+                                  "dd MMM, hh:mm a",
+                                ).format(widget.order.createdAt!),
                                 style: TextStyle(
                                   color: gBlackColor,
                                   fontSize: fontSize12,
@@ -523,7 +516,9 @@ class _OrderCardState extends State<OrderCard> {
                             Column(
                               children: [
                                 Text(
-                                  widget.order.additionalOrderDetails
+                                  widget
+                                          .order
+                                          .additionalOrderDetails
                                           ?.courierName ??
                                       "-",
                                   style: TextStyle(
@@ -564,8 +559,9 @@ class _OrderCardState extends State<OrderCard> {
                                       children: [
                                         AnimatedRotation(
                                           turns: isTrackHovered ? .05 : 0,
-                                          duration:
-                                              const Duration(milliseconds: 200),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
                                           child: Icon(
                                             Icons.local_shipping_outlined,
                                             color: isTrackHovered
@@ -588,8 +584,9 @@ class _OrderCardState extends State<OrderCard> {
                                         ),
                                         const SizedBox(width: 6),
                                         AnimatedSlide(
-                                          duration:
-                                              const Duration(milliseconds: 200),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
                                           offset: isTrackHovered
                                               ? const Offset(.15, 0)
                                               : Offset.zero,
@@ -668,20 +665,46 @@ class _OrderCardState extends State<OrderCard> {
             ],
           ),
           SizedBox(height: 1.h),
-          ...List.generate(
-            widget.order.productDetails!.length,
-            (index) {
+          if (widget.order.productDetails != null &&
+              widget.order.productDetails!.isNotEmpty)
+            ...List.generate(widget.order.productDetails!.length, (index) {
               final item = widget.order.productDetails![index];
+
+              final weight = item.itemWeight?.isNotEmpty == true
+                  ? "${item.itemWeight}${item.itemUnit != null ? " ${item.itemUnit}" : ""}"
+                  : "";
+
+              final servings = item.itemServings?.isNotEmpty == true
+                  ? "${item.itemServings}"
+                  : "";
+
+              final flavor = item.flavorName?.isNotEmpty == true
+                  ? "${item.flavorName}"
+                  : "";
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: ItemTile(
-                  title: "${item.itemName} | ${item.itemWeight ?? ""}",
-                  subtitle: "Qty ${item.itemQty} • ₹${item.itemPrice}",
+                  title: [
+                    item.itemName ?? "",
+                    if (weight.isNotEmpty) weight,
+                    servings,
+                    if (flavor.isNotEmpty) flavor,
+                  ].join(" | "),
+                  subtitle:
+                      "Qty ${item.itemQty ?? "0"} • ₹${item.itemPrice ?? "0"}",
                 ),
               );
-            },
-          ),
+            })
+          else
+            Text(
+              "No items",
+              style: TextStyle(
+                color: gGreyColor,
+                fontSize: fontSize10,
+                fontFamily: fontMedium,
+              ),
+            ),
         ],
       ),
     );
@@ -695,11 +718,7 @@ class _OrderCardState extends State<OrderCard> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.location_on,
-                color: gsecondaryColor,
-                size: 2.5.h,
-              ),
+              Icon(Icons.location_on, color: gsecondaryColor, size: 2.5.h),
               const SizedBox(width: 5),
               Text(
                 "Delivery Address",
@@ -734,302 +753,6 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 }
-
-// class OrderCard extends StatelessWidget {
-//   final GetTracking order;
-//   const OrderCard({super.key, required this.order});
-//
-//   String formatDate(DateTime? date) {
-//     if (date == null) return "-";
-//     return "${date.day.toString().padLeft(2, '0')}-"
-//         "${date.month.toString().padLeft(2, '0')}-"
-//         "${date.year}";
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       margin: const EdgeInsets.only(bottom: 20),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(16),
-//       ),
-//       child: Column(
-//         children: [
-//           Container(
-//             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 1.5.h),
-//             decoration: BoxDecoration(
-//               color: order.additionalOrderDetails?.status != "DELIVERED"
-//                   ? gsecondaryColor
-//                   : gBlackColor,
-//               borderRadius: const BorderRadius.vertical(
-//                 top: Radius.circular(16),
-//               ),
-//             ),
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 Row(
-//                   children: [
-//                     Icon(Icons.inventory, size: 2.5.h, color: gWhiteColor),
-//                     SizedBox(width: 0.5.w),
-//                     Text(
-//                       SafeString.value(order.cfOrderId ?? ''),
-//                       style: TextStyle(
-//                           color: gWhiteColor,
-//                           fontFamily: fontMedium,
-//                           fontSize: fontSize13),
-//                     ),
-//                   ],
-//                 ),
-//
-//                 /// STATUS
-//                 Container(
-//                   padding:
-//                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-//                   decoration: BoxDecoration(
-//                     color: gWhiteColor.withAlpha(AlphaHelper.fromOpacity(0.6)),
-//                     borderRadius: BorderRadius.circular(20),
-//                   ),
-//                   child: Text(
-//                     order.additionalOrderDetails?.status ?? "",
-//                     style: TextStyle(
-//                       color: gWhiteColor,
-//                       fontSize: fontSize07,
-//                       fontFamily: fontMedium,
-//                     ),
-//                   ),
-//                 )
-//               ],
-//             ),
-//           ),
-//           SizedBox(height: 2.h),
-//           Padding(
-//             padding: EdgeInsets.symmetric(horizontal: 1.5.w),
-//             child: Row(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 /// 🟢 LEFT - ORDER ITEMS
-//                 Expanded(
-//                   child: Container(
-//                     padding: const EdgeInsets.all(12),
-//                     decoration: BoxDecoration(
-//                       color: Colors.grey.shade100,
-//                       borderRadius: BorderRadius.circular(10),
-//                     ),
-//                     child: Column(
-//                       children: order.productDetails != null &&
-//                               order.productDetails!.isNotEmpty
-//                           ? List.generate(order.productDetails!.length,
-//                               (index) {
-//                               final item = order.productDetails![index];
-//
-//                               return Column(
-//                                 children: [
-//                                   ItemTile(
-//                                     title: (() {
-//                                       String name = item.itemName.toString();
-//                                       String servings =
-//                                           item.itemWeight?.toString() ?? '';
-//                                       List<String> parts = [
-//                                         name,
-//                                         if (servings.isNotEmpty) servings
-//                                       ];
-//                                       return parts.join(' | ');
-//                                     })(),
-//                                     subtitle:
-//                                         "${item.itemQty ?? 0} unit • ₹${item.itemPrice ?? 0}",
-//                                   ),
-//
-//                                   /// 🔥 Divider (not for last item)
-//                                   if (index != order.productDetails!.length - 1)
-//                                     const CommonDivider(
-//                                         verticalMargin: 2, opacity: 0.3)
-//                                 ],
-//                               );
-//                             })
-//                           : [
-//                               const Text("No items"),
-//                             ],
-//                     ),
-//                   ),
-//                 ),
-//
-//                 const SizedBox(width: 20),
-//
-//                 /// 🔵 RIGHT SIDE
-//                 Expanded(
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       /// 📍 ADDRESS
-//                       Container(
-//                         padding: const EdgeInsets.all(12),
-//                         decoration: BoxDecoration(
-//                           color: Colors.grey.shade100,
-//                           borderRadius: BorderRadius.circular(12),
-//                         ),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             Row(
-//                               children: [
-//                                 Icon(Icons.location_on_outlined,
-//                                     color: gsecondaryColor, size: 2.h),
-//                                 SizedBox(width: 0.5.w),
-//                                 Text(
-//                                   "SENT TO",
-//                                   style: TextStyle(
-//                                     fontSize: fontSize08,
-//                                     color: gGreyColor,
-//                                     fontFamily: fontBook,
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                             const SizedBox(height: 2),
-//                             Text(
-//                               "${order.name}, ${order.houseNo}, ${order.address}, ${order.city}, ${order.state}, ${order.country} - ${order.pincode}.",
-//                               style: TextStyle(
-//                                 fontSize: fontSize11,
-//                                 color: gBlackColor,
-//                                 fontFamily: fontMedium,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//
-//                       const SizedBox(height: 10),
-//
-//                       /// 💰 TOTAL + DATE
-//                       Container(
-//                         padding: const EdgeInsets.all(12),
-//                         decoration: BoxDecoration(
-//                           color: const Color(0xFF0B1B33),
-//                           borderRadius: BorderRadius.circular(12),
-//                         ),
-//                         child: Row(
-//                           children: [
-//                             Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(
-//                                   "CREATED",
-//                                   style: TextStyle(
-//                                     color: gWhiteColor.withAlpha(
-//                                         AlphaHelper.fromOpacity(0.6)),
-//                                     fontSize: fontSize07,
-//                                     fontFamily: fontBook,
-//                                   ),
-//                                 ),
-//                                 const SizedBox(height: 4),
-//                                 Text(
-//                                   DateFormat("dd MMM, hh:mm a")
-//                                       .format(order.createdAt!),
-//                                   style: TextStyle(
-//                                     color: gWhiteColor,
-//                                     fontSize: fontSize12,
-//                                     fontFamily: fontBold,
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                             const Spacer(),
-//                             Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(
-//                                   "TOTAL PAID",
-//                                   style: TextStyle(
-//                                     color: gWhiteColor.withAlpha(
-//                                         AlphaHelper.fromOpacity(0.6)),
-//                                     fontSize: fontSize07,
-//                                     fontFamily: fontBook,
-//                                   ),
-//                                 ),
-//                                 const SizedBox(height: 4),
-//                                 Text(
-//                                   "₹${order.totalAmount ?? "0"}",
-//                                   style: TextStyle(
-//                                     color: gWhiteColor,
-//                                     fontSize: fontSize12,
-//                                     fontFamily: fontBold,
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 )
-//               ],
-//             ),
-//           ),
-//           SizedBox(height: 1.h),
-//           order.additionalOrderDetails == null
-//               ? const SizedBox()
-//               : Padding(
-//                   padding: EdgeInsets.only(left: 2.w, right: 2.w, bottom: 2.h),
-//                   child: Row(
-//                     crossAxisAlignment: CrossAxisAlignment.center,
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Text(
-//                         order.additionalOrderDetails?.courierName ?? '',
-//                         style: TextStyle(
-//                           fontFamily: kFontMedium,
-//                           fontSize: 14.dp,
-//                           color: gBlackColor,
-//                         ),
-//                       ),
-//                       SizedBox(
-//                         height: 5.h,
-//                         child: FloatingActionButton.extended(
-//                           onPressed: () async {
-//                             String googleMapUrl =
-//                                 "https://shiprocket.co/tracking/${order.additionalOrderDetails?.awbCode ?? ''}";
-//                             Uri uri = Uri.parse(googleMapUrl);
-//
-//                             if (await canLaunchUrl(uri)) {
-//                               await launchUrl(uri,
-//                                   mode: LaunchMode.externalApplication);
-//                             } else {
-//                               AppConfig().showSnackbar(
-//                                   context, "Could not open Google Maps.",
-//                                   isError: true);
-//                             }
-//                           },
-//                           backgroundColor: gBlackColor,
-//                           icon: Icon(
-//                             Icons.location_on_outlined,
-//                             color: gWhiteColor,
-//                             size: 2.5.h,
-//                           ),
-//                           shape: RoundedRectangleBorder(
-//                             borderRadius: BorderRadius.circular(
-//                                 10), // Reduce border radius
-//                           ),
-//                           label: Text(
-//                             "Track Order",
-//                             style: TextStyle(
-//                               fontSize: fontSize12,
-//                               fontFamily: kFontMedium,
-//                               color: gWhiteColor,
-//                             ),
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//         ],
-//       ),
-//     );
-//   }
-// }
 
 class ItemTile extends StatelessWidget {
   final String title;
@@ -1078,7 +801,7 @@ class ItemTile extends StatelessWidget {
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:gwc_shop/controllers/models/shop_models/category_model.dart';
 import 'package:gwc_shop/controllers/models/shop_models/products_by_category_model.dart';
 import 'package:gwc_shop/utils/constants.dart';
 import 'package:gwc_shop/widgets/button_widgets/button_widget.dart';
-import 'package:gwc_shop/widgets/container_widgets/common_divider.dart';
 import 'package:gwc_shop/widgets/iamge_picker_widget/thumbnail_view.dart';
 
+import '../../../../../controllers/models/shop_models/get_cluster_list_model.dart';
 import '../../../../../utils/responsive_helper.dart';
 
 class AddAsComboBanner extends StatelessWidget {
@@ -15,6 +17,7 @@ class AddAsComboBanner extends StatelessWidget {
   final double comboPrice;
   final VoidCallback onBuyCombo;
   final CategoryList category;
+  final ClusterList? cluster;
 
   const AddAsComboBanner({
     super.key,
@@ -23,6 +26,7 @@ class AddAsComboBanner extends StatelessWidget {
     required this.comboPrice,
     required this.onBuyCombo,
     required this.category,
+    this.cluster,
   });
 
   double get savedAmount => originalPrice - comboPrice;
@@ -37,107 +41,250 @@ class AddAsComboBanner extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (responsive.isMobile || responsive.isTablet) {
-          return _buildMobile(context);
+        final isMobileOrTablet = responsive.isMobile || responsive.isTablet;
+
+        final content = _buildMobile(
+          context,
+          isMobileOrTablet: isMobileOrTablet,
+        );
+
+        // ============================================================
+        // MOBILE + TABLET
+        // ============================================================
+
+        if (isMobileOrTablet) {
+          return content;
         }
-        return _buildDesktop(context);
+
+        // ============================================================
+        // LAPTOP + DESKTOP
+        // ============================================================
+
+        return Align(alignment: Alignment.center, child: content);
       },
     );
   }
 
   // ============================================================
-  // DESKTOP
+  // MOBILE + TABLET
   // ============================================================
-  Widget _buildDesktop(BuildContext context) {
+
+  Widget _buildMobile(BuildContext context, {required bool isMobileOrTablet}) {
+    final clusterName = (cluster?.clusterName ?? "")
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), ' ')
+        .replaceAll(RegExp(r'<[^>]*>'), ' ')
+        .replaceAll(RegExp(r'[\r\n\t]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    final bool isMobile = screenWidth < 600;
+    final bool isSmallMobile = screenWidth < 360;
+    final bool isBigDevice = screenWidth >= 600;
+
+    // ============================================================
+    // IMAGE SIZE
+    // ============================================================
+
+    final double imageSize;
+
+    if (isSmallMobile) {
+      imageSize = 52;
+    } else if (isMobile) {
+      imageSize = 62;
+    } else {
+      imageSize = 72;
+    }
+
+    // ============================================================
+    // PADDING
+    // ============================================================
+
+    final double horizontalPadding = isMobile ? 10 : 16;
+    final double verticalPadding = isMobile ? 9 : 12;
+
+    // ============================================================
+    // CONTENT WIDGET
+    // ============================================================
+
+    Widget contentColumn() {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --------------------------------------------------------
+          // CLUSTER NAME
+          // --------------------------------------------------------
+          Text(
+            clusterName.isEmpty ? "COMBO" : clusterName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.robotoCondensed(
+              fontSize: fontSize16,
+              fontWeight: FontWeight.w800,
+              color: gPrimaryColor,
+              height: 1,
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          // --------------------------------------------------------
+          // PRODUCT NAMES
+          // --------------------------------------------------------
+          Text(
+            products
+                .map((e) => e.productTitle ?? '')
+                .where((e) => e.trim().isNotEmpty)
+                .join(" + "),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.roboto(
+              fontSize: fontSize12,
+              fontWeight: FontWeight.w500,
+              color: gPrimaryColor,
+              height: 1.1,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // --------------------------------------------------------
+          // PRICE
+          // --------------------------------------------------------
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "₹${comboPrice.toStringAsFixed(0)}",
+                style: GoogleFonts.robotoCondensed(
+                  fontSize: fontSize20,
+                  fontWeight: FontWeight.w900,
+                  color: gPrimaryColor,
+                  height: 1,
+                ),
+              ),
+
+              if (originalPrice > comboPrice) ...[
+                const SizedBox(width: 5),
+                Text(
+                  "₹${originalPrice.toStringAsFixed(0)}",
+                  style: GoogleFonts.roboto(
+                    fontSize: 8,
+                    color: const Color(0xff77766F),
+                    decoration: TextDecoration.lineThrough,
+                    height: 1,
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 7),
+
+          // --------------------------------------------------------
+          // BUTTON
+          // --------------------------------------------------------
+          ButtonWidget(
+            text: "ADD COMBO TO CART",
+            onPressed: onBuyCombo,
+            isLoading: false,
+            radius: 10,
+          ),
+        ],
+      );
+    }
+
+    // ============================================================
+    // OUTER CONTAINER
+    // ============================================================
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xffFAF9F4),
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: const Color(0xffE7E2D7)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Row(
-        children: [
-          _productImage(context, size: 72, imageSize: 42),
-          const SizedBox(width: 10),
-          _description(titleSize: 12, descriptionSize: 8),
-          Spacer(),
-          _divider(30),
-          _price(priceSize: 20, crossAxisAlignment: CrossAxisAlignment.start),
-          _divider(20),
-          _buyButton(height: 30),
-          SizedBox(width: 20),
-        ],
-      ),
-    );
-  }
 
-  /// ============================================================
-  /// MOBILE
-  /// ============================================================
-  Widget _buildMobile(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xffFAF9F4),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffE7E2D7)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 7,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _productImage(context, size: 66, imageSize: 38),
-              const SizedBox(width: 15),
-              Expanded(
-                child: _description(titleSize: 11, descriptionSize: 7.5),
-              ),
-            ],
-          ),
-          CommonDivider(verticalMargin: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _price(
-                  priceSize: 20,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                ),
-              ),
-              const SizedBox(width: 7),
-
-              Expanded(
-                flex: 2,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buyButton(height: 34),
+      // ==========================================================
+      // CENTER THE ACTUAL CONTENT
+      // ==========================================================
+      child: Center(
+        child: isBigDevice
+            ? Row(
+                // IMPORTANT:
+                // Don't let Row take the complete width.
+                // This makes the ACTUAL content group centered.
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // ------------------------------------------------
+                  // IMAGE
+                  // ------------------------------------------------
+                  SizedBox(
+                    width: imageSize,
+                    height: imageSize,
+                    child: ClipOval(
+                      child: ThumbnailView(
+                        context: context,
+                        imageUrl: cluster?.clusterThumbnailUrl,
+                        enablePreview: false,
+                        width: imageSize,
+                        height: imageSize,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // ------------------------------------------------
+                  // CONTENT
+                  // ------------------------------------------------
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: contentColumn(),
+                  ),
+                ],
+              )
+            // ======================================================
+            // MOBILE
+            // ======================================================
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // ------------------------------------------------
+                  // IMAGE
+                  // ------------------------------------------------
+                  SizedBox(
+                    width: imageSize,
+                    height: imageSize,
+                    child: ClipOval(
+                      child: ThumbnailView(
+                        context: context,
+                        imageUrl: cluster?.clusterThumbnailUrl,
+                        enablePreview: false,
+                        width: imageSize,
+                        height: imageSize,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // ------------------------------------------------
+                  // CONTENT
+                  // ------------------------------------------------
+                  Expanded(child: contentColumn()),
+                ],
               ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -145,6 +292,7 @@ class AddAsComboBanner extends StatelessWidget {
   // ============================================================
   // PRODUCT IMAGE
   // ============================================================
+
   Widget _productImage(
     BuildContext context, {
     required double size,
@@ -282,9 +430,9 @@ class AddAsComboBanner extends StatelessWidget {
   // SAVE BADGE
   // ============================================================
 
-  Widget _saveBadge({bool compact = false}) {
+  Widget _saveBadge() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: gMainColor,
         borderRadius: BorderRadius.circular(6),
@@ -299,7 +447,9 @@ class AddAsComboBanner extends StatelessWidget {
               color: gWhiteColor,
             ),
           ),
-          SizedBox(width: 5),
+
+          const SizedBox(width: 5),
+
           Text(
             "₹${savedAmount.toStringAsFixed(0)}",
             style: GoogleFonts.robotoCondensed(
@@ -316,6 +466,7 @@ class AddAsComboBanner extends StatelessWidget {
   // ============================================================
   // BUY BUTTON
   // ============================================================
+
   Widget _buyButton({required double height}) {
     return Column(
       children: [
@@ -328,9 +479,14 @@ class AddAsComboBanner extends StatelessWidget {
           color: category.color,
           radius: 8,
         ),
-        SizedBox(height: 10),
+
+        const SizedBox(height: 10),
+
         Text(
-          "All ${products.length} Shots • ${products.first.itemQty}${products.first.weightType?.unit} Each • ${products.first.servings} Servings Each",
+          "All ${products.length} Shots • "
+          "${products.first.itemQty}"
+          "${products.first.weightType?.unit} Each • "
+          "${products.first.servings} Servings Each",
           textAlign: TextAlign.center,
           style: GoogleFonts.roboto(
             fontSize: fontSize09,

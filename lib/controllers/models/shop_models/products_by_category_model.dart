@@ -112,9 +112,11 @@ class Products {
     productId = json['product_id'];
     productTitle = json['product_title']?.toString();
     productDescription = json['product_description']?.toString();
+
     productThumbnails = json['product_thumbnails'] != null
         ? (json['product_thumbnails'] as List).map((e) => e.toString()).toList()
         : <String>[];
+
     productRating = json['product_rating']?.toString();
     productUsersCount = json['product_users_count']?.toString();
     actualPrice = json['actual_price']?.toString();
@@ -123,13 +125,56 @@ class Products {
     itemQty = json['item_qty']?.toString();
     servings = json['servings']?.toString();
     orderBy = json['order_by']?.toString();
+
     productSpecialTag = json['product_special_tag']?.toString();
     isProductPopular = json['is_product_popular'];
     isNew = json['is_new'];
-    hasFlavours = json['has_flavours']?.toString();
+
+    // ============================================================
+    // PRODUCT
+    // ============================================================
+
+    product = json['product'] != null && json['product'] is Map<String, dynamic>
+        ? Product.fromJson(Map<String, dynamic>.from(json['product']))
+        : null;
+
+    // ============================================================
+    // HAS FLAVOURS
+    //
+    // API can return it:
+    //
+    // 1. Directly:
+    //    "has_flavours": 1
+    //
+    // 2. Inside product:
+    //    "product": {
+    //       "has_flavours": 1
+    //    }
+    //
+    // UI will always use:
+    //    productItem.hasFlavours
+    // ============================================================
+
+    final outerHasFlavours = json['has_flavours'];
+
+    final nestedHasFlavours = json['product'] is Map
+        ? json['product']['has_flavours']
+        : null;
+
+    hasFlavours = outerHasFlavours != null
+        ? outerHasFlavours.toString()
+        : nestedHasFlavours?.toString();
+
+    // ============================================================
+    // OTHER FIELDS
+    // ============================================================
+
     boughtByUsersCount = json['bought_by_users_count']?.toString();
+
     productIngredients = json['product_ingredients']?.toString();
+
     productRecipeContent = json['product_recipe_content']?.toString();
+
     productRecipeVideo = json['product_recipe_video']?.toString();
 
     mealTimings = json['meal_timings'] != null
@@ -151,24 +196,32 @@ class Products {
     }
 
     productCategoryId = json['product_category_id']?.toString();
+
     productWeightTypeId = json['product_weight_type_id']?.toString();
+
     isArchived = json['is_archived']?.toString();
+
     createdAt = json['created_at']?.toString();
+
     updatedAt = json['updated_at']?.toString();
 
-    // FIXED: Added null safety for productThumbnailsUrls
     productThumbnailsUrls = json['product_thumbnails_urls'] != null
-        ? (json['product_thumbnails_urls'] as List).map((e) => e.toString()).toList()
+        ? (json['product_thumbnails_urls'] as List)
+              .map((e) => e.toString())
+              .toList()
         : <String>[];
 
-    // NEW FIELD: productImages with same null safety pattern
     productImages = json['product_images'] != null
         ? (json['product_images'] as List).map((e) => e.toString()).toList()
         : <String>[];
 
-    product = json['product'] != null ? Product.fromJson(json['product']) : null;
-    category = json['category'] != null ? Category.fromJson(json['category']) : null;
-    weightType = json['weight_type'] != null ? WeightType.fromJson(json['weight_type']) : null;
+    category = json['category'] != null
+        ? Category.fromJson(json['category'])
+        : null;
+
+    weightType = json['weight_type'] != null
+        ? WeightType.fromJson(json['weight_type'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -196,7 +249,9 @@ class Products {
     data['product_recipe_video'] = productRecipeVideo;
 
     if (productTestimonials != null) {
-      data['product_testimonials'] = productTestimonials!.map((v) => v.toJson()).toList();
+      data['product_testimonials'] = productTestimonials!
+          .map((v) => v.toJson())
+          .toList();
     }
     if (faq != null) {
       data['faq'] = faq!.map((v) => v.toJson()).toList();
@@ -457,7 +512,8 @@ class Category {
 
   Category({
     this.id,
-    this.name,this.colorCode,
+    this.name,
+    this.colorCode,
     this.thumbnail,
     this.hasAdditional,
     this.subText,
@@ -510,15 +566,11 @@ class Category {
 
   Color get color {
     try {
-      if (colorCode == null ||
-          colorCode!.isEmpty ||
-          colorCode == "null") {
+      if (colorCode == null || colorCode!.isEmpty || colorCode == "null") {
         return const Color(0xff3B2415);
       }
 
-      return Color(
-        int.parse(colorCode!.replaceFirst('#', '0xff')),
-      );
+      return Color(int.parse(colorCode!.replaceFirst('#', '0xff')));
     } catch (e) {
       return const Color(0xff3B2415);
     }

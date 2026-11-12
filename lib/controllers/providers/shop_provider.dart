@@ -15,24 +15,38 @@ enum ShopLoadingType {
 }
 
 class ShopProvider extends ChangeNotifier {
-  int selectedTab = kDebugMode ? 0 : 1;
-  // CategoryList? selectedCategory;
+  int selectedTab = kDebugMode ? 1 : 1;
+  // ============================================================
+  // SHOP PAGE VIEW
+  // ============================================================
 
-  final PageController shopPageController = PageController(initialPage: 0);
+  final PageController shopPageController = PageController(
+    initialPage: 0,
+  );
 
-  void changeTab(int index) {
-    selectedTab = index;
+  int _shopPageIndex = 0;
+
+  int get shopPageIndex => _shopPageIndex;
+
+  void changeShopPage(int pageIndex) {
+    if (_shopPageIndex == pageIndex) return;
+
+    _shopPageIndex = pageIndex;
     notifyListeners();
   }
 
   void navigateShopPage(int pageIndex) {
+    _shopPageIndex = pageIndex;
+
     if (shopPageController.hasClients) {
       shopPageController.animateToPage(
         pageIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOutCubic,
       );
     }
+
+    notifyListeners();
   }
 
   void onTabReClicked(int index) {
@@ -40,35 +54,12 @@ class ShopProvider extends ChangeNotifier {
       // Shop tab: reset to first page
       navigateShopPage(0);
     }
-    // Add more cases here for other tabs later if needed
-    // Example:
-    // if (index == 1) {
-    //   // Food Farmacy tab: reset filters / scroll to top, etc.
-    // }
   }
-  //
-  // void openCategory(CategoryList category) {
-  //   selectedCategory = category;
-  //   notifyListeners();
-  //
-  //   if (shopPageController.hasClients) {
-  //     shopPageController.animateToPage(
-  //       1,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeInOut,
-  //     );
-  //   }
-  // }
-  //
-  // void openProductPage() {
-  //   if (shopPageController.hasClients) {
-  //     shopPageController.animateToPage(
-  //       2,
-  //       duration: const Duration(milliseconds: 300),
-  //       curve: Curves.easeInOut,
-  //     );
-  //   }
-  // }
+
+  void changeTab(int index) {
+    selectedTab = index;
+    notifyListeners();
+  }
 
   final Set<ShopLoadingType> _loadingTypes = {};
 
@@ -90,7 +81,7 @@ class ShopProvider extends ChangeNotifier {
     setLoading(ShopLoadingType.getIngredientCategory, true);
 
     try {
-      final data = await NetworkService.get(GwcApi.getCategoryListApiUrl());
+      final data = await NetworkService.get(GwcApi.getCategoryListApiUrl(),showResponse: false);
       if (data['status'] == true) {
         final model = CategoryModel.fromJson(data);
         allCategories = model.data ?? [];
@@ -105,8 +96,8 @@ class ShopProvider extends ChangeNotifier {
           return orderA.compareTo(orderB);
         });
 
-        debugPrint("All Categories: $allCategories");
-        debugPrint("Categories: $categories");
+        // debugPrint("All Categories: $allCategories");
+        // debugPrint("Categories: $categories");
         notifyListeners();
       }
     } catch (e) {
@@ -122,7 +113,8 @@ class ShopProvider extends ChangeNotifier {
   Future<void> selectTimelineCategory(String categoryName) async {
     try {
       final category = allCategories.firstWhere(
-            (e) => (e.name ?? "").trim().toUpperCase() ==
+        (e) =>
+            (e.name ?? "").trim().toUpperCase() ==
             categoryName.trim().toUpperCase(),
       );
 
@@ -138,7 +130,6 @@ class ShopProvider extends ChangeNotifier {
     }
   }
 
-
   List<Products> products = [];
 
   Future<void> fetchProductsByCategory(String categoryId) async {
@@ -148,16 +139,32 @@ class ShopProvider extends ChangeNotifier {
 
     try {
       final data = await NetworkService.get(
-        GwcApi.getProductsByCategoryApiUrl(categoryId),
+        GwcApi.getProductsByCategoryApiUrl(categoryId),showResponse: false
       );
+
+      // debugPrint("========== PRODUCT API ==========");
+      // debugPrint("STATUS : ${data['status']}");
+      // debugPrint("DATA : ${data['data']}");
+      // debugPrint("================================");
+
       if (data['status'] == 200) {
         final model = ProductsByCategoryModel.fromJson(data);
+
         products = model.data ?? [];
-        debugPrint("Products : $products");
+
+        // for (final product in products) {
+        //   debugPrint(
+        //     "PRODUCT : ${product.productTitle} | "
+        //     "hasFlavours : ${product.hasFlavours} | "
+        //     "nested flavours : ${product.product?.flavours}",
+        //   );
+        // }
+
         notifyListeners();
       }
-    } catch (e) {
+    } catch (e, st) {
       debugPrint("Error: $e");
+      debugPrintStack(stackTrace: st);
     } finally {
       setLoading(ShopLoadingType.getProductsByCategory, false);
     }
@@ -180,5 +187,26 @@ class ShopProvider extends ChangeNotifier {
     } finally {
       setLoading(ShopLoadingType.getClusterList, false);
     }
+  }
+
+  // ============================================================
+  // FOOTER CATEGORY NAVIGATION
+  // ============================================================
+
+  int? _pendingFooterCategoryId;
+
+  int? get pendingFooterCategoryId => _pendingFooterCategoryId;
+
+  void openFooterCategory(int categoryId) {
+    _pendingFooterCategoryId = categoryId;
+
+    // Open All Products tab
+    selectedTab = 1;
+
+    notifyListeners();
+  }
+
+  void clearFooterCategory() {
+    _pendingFooterCategoryId = null;
   }
 }

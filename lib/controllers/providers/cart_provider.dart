@@ -13,6 +13,7 @@ import '../../screens/success_screens/success_screen.dart';
 import '../../utils/api_urls.dart';
 import '../../utils/app_config.dart';
 import '../../utils/network_service.dart';
+import '../../widgets/custom_snack_bar.dart';
 import '../../widgets/loading_widgets/address_loader.dart';
 import '../models/get_additional_products_model/available_courier_partners_model.dart';
 import '../models/get_additional_products_model/employee_by_model.dart';
@@ -23,11 +24,12 @@ import '../models/get_phone_details_model/update_product_model.dart';
 
 enum CartLoadingType {
   phone,
+  phoneOtp,
   pinCode,
   employee,
   emailOtp,
   submitItems,
-  employeeSubmitItems
+  employeeSubmitItems,
 }
 
 class Item {
@@ -97,6 +99,63 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// PHONE OTP
+
+  String phoneOtp = '';
+
+  Future<bool> sendPhoneOtp(BuildContext context, String phone) async {
+    setLoading(CartLoadingType.phoneOtp, true);
+
+    try {
+      phoneOtp = '';
+
+      final response = await NetworkService.post(
+        GwcApi.getPhoneOtpUrl(phone),
+        {},
+      );
+
+      if (response['status'] == 200) {
+        phoneOtp = (response['otp'] ?? '').toString();
+
+        if (phoneOtp.isNotEmpty) {
+          CustomSnackBar.show(
+            context,
+            message: 'OTP sent successfully.',
+            type: SnackBarType.success,
+          );
+          return true;
+        }
+      }
+
+      // API failed or OTP was missing.
+      phoneOtp = '';
+      CustomSnackBar.show(
+        context,
+        message:
+        'We are unable to fetch details! Enter the details manually and proceed.',
+        type: SnackBarType.warning,
+      );
+      return false;
+    } catch (e) {
+      // Keep technical errors in debug logs only.
+      debugPrint('Phone OTP API error: $e');
+
+      phoneOtp = '';
+      CustomSnackBar.show(
+        context,
+        message: 'Please enter a valid 10-digit phone number.',
+        type: SnackBarType.error,
+      );
+      return false;
+    } finally {
+      setLoading(CartLoadingType.phoneOtp, false);
+    }
+  }
+
+  bool verifyPhoneOtpLocally(String enteredOtp) {
+    return phoneOtp.isNotEmpty && phoneOtp == enteredOtp.trim();
+  }
+
   ///ADDRESS
   TextEditingController couponController = TextEditingController();
 
@@ -114,29 +173,22 @@ class CartProvider with ChangeNotifier {
     setLoading(CartLoadingType.phone, true);
 
     try {
-      final data = await NetworkService.post(
-        "$getEvaluationDataUrl$phone",
-        {},
-      );
+      final data = await NetworkService.post("$getEvaluationDataUrl$phone", {});
 
       if (data["status"] == 200) {
         final model = GetEvaluationDataModel.fromJson(data);
         final getUserAddress = model.data;
 
-        nameController.text =
-            getUserAddress?.patient?.user?.name ?? '';
+        nameController.text = getUserAddress?.patient?.user?.name ?? '';
 
-        phoneController.text =
-            getUserAddress?.patient?.user?.phone ?? '';
+        phoneController.text = getUserAddress?.patient?.user?.phone ?? '';
 
-        emailController.text =
-            getUserAddress?.patient?.user?.email ?? '';
+        emailController.text = getUserAddress?.patient?.user?.email ?? '';
 
         address1Controller.text =
-        "No.${getUserAddress?.patient?.user?.address?.split('.').last}";
+            "No.${getUserAddress?.patient?.user?.address?.split('.').last}";
 
-        address2Controller.text =
-            getUserAddress?.patient?.address2 ?? '';
+        address2Controller.text = getUserAddress?.patient?.address2 ?? '';
 
         // 🔥 Get pincode from phone API
         final fetchedPinCode =
@@ -144,14 +196,11 @@ class CartProvider with ChangeNotifier {
 
         pinCodeController.text = fetchedPinCode;
 
-        cityController.text =
-            getUserAddress?.patient?.city ?? '';
+        cityController.text = getUserAddress?.patient?.city ?? '';
 
-        stateController.text =
-            getUserAddress?.patient?.state ?? '';
+        stateController.text = getUserAddress?.patient?.state ?? '';
 
-        countryController.text =
-            getUserAddress?.patient?.country ?? '';
+        countryController.text = getUserAddress?.patient?.country ?? '';
 
         // 🔥 IMPORTANT:
         // Phone API success -> automatically hit Pincode API
@@ -245,7 +294,7 @@ class CartProvider with ChangeNotifier {
         "pickup_postcode": "560092",
         "delivery_postcode": pinCode,
         "weight": "0.6",
-        "cod": "0"
+        "cod": "0",
       };
 
       final data = await NetworkService.post(fetchCourierPartnersApiUrl, body);
@@ -406,23 +455,25 @@ class CartProvider with ChangeNotifier {
     String? cartData = prefs.getString('cart');
     if (cartData != null) {
       _items = List<Map<String, dynamic>>.from(jsonDecode(cartData))
-          .map((itemData) => Item(
-        id: itemData['item_id'],
-        name: itemData['item_name'],
-        price: (itemData['item_price'] as num).toDouble(),
-        quantity: itemData['item_qty'],
-        description: itemData['description'],
-        specialTag: itemData['special_tag'],
-        weight: itemData['item_weight'],
-        unitId: itemData['item_unit_id'],
-        unitName: itemData['item_unit'],
-        servings: itemData['item_servings'],
-        category: itemData['category'],
-        thumbnail: itemData['thumbnail'],
-        flavorName: itemData['flavor_name'],
-        flavorPrice: (itemData['flavor_price'] ?? 0).toDouble(),
-        flavorId: itemData['flavor_id'],
-      ))
+          .map(
+            (itemData) => Item(
+              id: itemData['item_id'],
+              name: itemData['item_name'],
+              price: (itemData['item_price'] as num).toDouble(),
+              quantity: itemData['item_qty'],
+              description: itemData['description'],
+              specialTag: itemData['special_tag'],
+              weight: itemData['item_weight'],
+              unitId: itemData['item_unit_id'],
+              unitName: itemData['item_unit'],
+              servings: itemData['item_servings'],
+              category: itemData['category'],
+              thumbnail: itemData['thumbnail'],
+              flavorName: itemData['flavor_name'],
+              flavorPrice: (itemData['flavor_price'] ?? 0).toDouble(),
+              flavorId: itemData['flavor_id'],
+            ),
+          )
           .toList();
     }
 
@@ -441,8 +492,8 @@ class CartProvider with ChangeNotifier {
     // int index = _items.indexWhere((existingItem) => existingItem.id == item.id);
 
     int index = _items.indexWhere(
-          (existingItem) =>
-      existingItem.id == item.id &&
+      (existingItem) =>
+          existingItem.id == item.id &&
           existingItem.flavorName == item.flavorName,
     );
 
@@ -461,7 +512,8 @@ class CartProvider with ChangeNotifier {
 
   void removeItem(BuildContext context, int itemId, String? flavorName) async {
     int index = _items.indexWhere(
-            (item) => item.id == itemId && item.flavorName == flavorName);
+      (item) => item.id == itemId && item.flavorName == flavorName,
+    );
 
     // int index = _items.indexWhere((item) => item.id == itemId);
     if (index != -1) {
@@ -480,7 +532,8 @@ class CartProvider with ChangeNotifier {
 
   void removeProductCompletely(int itemId, String? flavorName) {
     _items.removeWhere(
-            (item) => item.id == itemId && item.flavorName == flavorName);
+      (item) => item.id == itemId && item.flavorName == flavorName,
+    );
     // _items.removeWhere((item) => item.id == itemId);
 
     _saveCart();
@@ -489,10 +542,15 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateItemQuantity(BuildContext context, int itemId, String? flavorName,
-      int quantity) async {
+  void updateItemQuantity(
+    BuildContext context,
+    int itemId,
+    String? flavorName,
+    int quantity,
+  ) async {
     int index = _items.indexWhere(
-            (item) => item.id == itemId && item.flavorName == flavorName);
+      (item) => item.id == itemId && item.flavorName == flavorName,
+    );
     // int index = _items.indexWhere((item) => item.id == itemId);
     if (index != -1) {
       _items[index].quantity = quantity;
@@ -525,16 +583,17 @@ class CartProvider with ChangeNotifier {
   void calculateBill() {
     totalPrice = items.fold(
       0.0,
-          (sum, item) =>
-      sum + ((item.price! + (item.flavorPrice ?? 0)) * item.quantity),
+      (sum, item) =>
+          sum + ((item.price! + (item.flavorPrice ?? 0)) * item.quantity),
     );
 
     if (isCompanyCoupon && employeeData != null) {
       availableCredits =
           double.tryParse(employeeData?.availableBalance ?? "0") ?? 0;
 
-      usedCredits =
-      totalPrice < availableCredits ? totalPrice : availableCredits;
+      usedCredits = totalPrice < availableCredits
+          ? totalPrice
+          : availableCredits;
 
       subtotal = totalPrice - usedCredits;
 
@@ -617,23 +676,19 @@ class CartProvider with ChangeNotifier {
           String orderId = data.cashFreeResponse?.cfOrderId ?? "";
           String sessionId = data.cashFreeResponse?.paymentSessionId ?? "";
 
-          await webCheckout(
-            context,
-            data.id.toString(),
-            orderId,
-            sessionId,
-          );
+          await webCheckout(context, data.id.toString(), orderId, sessionId);
 
           return true;
         } else {
           /// ❌ EDGE CASE FIX
           AppConfig().showSnackBar(
-              context, model.message ?? "Invalid response from server",
-              isError: true);
+            context,
+            model.message ?? "Invalid response from server",
+            isError: true,
+          );
           return false;
         }
       }
-
       /// ❌ HANDLE 409 / OTHER ERRORS
       else {
         String message =
@@ -709,12 +764,13 @@ class CartProvider with ChangeNotifier {
         } else {
           /// ❌ EDGE CASE FIX
           AppConfig().showSnackBar(
-              context, model.message ?? "Invalid response from server",
-              isError: true);
+            context,
+            model.message ?? "Invalid response from server",
+            isError: true,
+          );
           return false;
         }
       }
-
       /// ❌ HANDLE 409 / OTHER ERRORS
       else {
         String message =
@@ -734,7 +790,11 @@ class CartProvider with ChangeNotifier {
   var cfPaymentGatewayService = CFPaymentGatewayService();
 
   Future<void> webCheckout(
-      BuildContext context, String id, String orderId, String sessionId) async {
+    BuildContext context,
+    String id,
+    String orderId,
+    String sessionId,
+  ) async {
     try {
       debugPrint("ID : $id\nORDER ID : $orderId\nSESSION ID : $sessionId");
       var session = CFSessionBuilder()
@@ -744,7 +804,7 @@ class CartProvider with ChangeNotifier {
           .build();
 
       cfPaymentGatewayService.setCallback(
-            (String transactionId) {
+        (String transactionId) {
           debugPrint("✅ Payment Success: $transactionId");
 
           updatePayment(
@@ -758,13 +818,10 @@ class CartProvider with ChangeNotifier {
             Navigator.pop(context);
           }
         },
-            (CFErrorResponse errorResponse, String errorMessage) {
+        (CFErrorResponse errorResponse, String errorMessage) {
           debugPrint("❌ Payment Failed: $errorMessage");
 
-          updatePayment(
-            context,
-            status: "FAILURE",
-          );
+          updatePayment(context, status: "FAILURE");
 
           if (Navigator.canPop(context)) {
             Navigator.pop(context);
@@ -772,8 +829,9 @@ class CartProvider with ChangeNotifier {
         },
       );
 
-      var cfWebCheckout =
-      CFWebCheckoutPaymentBuilder().setSession(session).build();
+      var cfWebCheckout = CFWebCheckoutPaymentBuilder()
+          .setSession(session)
+          .build();
 
       cfPaymentGatewayService.doPayment(cfWebCheckout);
     } catch (e) {
@@ -782,11 +840,11 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<void> updatePayment(
-      BuildContext context, {
-        String? id,
-        String? paymentId,
-        String? status,
-      }) async {
+    BuildContext context, {
+    String? id,
+    String? paymentId,
+    String? status,
+  }) async {
     try {
       AppLoader.show(context);
 
@@ -798,10 +856,7 @@ class CartProvider with ChangeNotifier {
         'total_amount': roundToWhole(grandTotal),
       };
 
-      final res = await NetworkService.post(
-        updateGwcProductsUrl,
-        body,
-      );
+      final res = await NetworkService.post(updateGwcProductsUrl, body);
 
       AppLoader.hide(context);
 
@@ -819,7 +874,6 @@ class CartProvider with ChangeNotifier {
           ),
         );
       }
-
       /// ❌ FAILURE CASE
       else {
         CommonSuccessDialog.show(context, status: "Payment Failed");

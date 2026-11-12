@@ -37,8 +37,8 @@ final CrossAxisAlignment? isRowAlign;
         children: isRequired
             ? const [
           TextSpan(
-            text: ' *',
-            style: TextStyle(color: gsecondaryColor),
+            text: '*',
+            style: TextStyle(color: gPrimaryColor),
           )
         ]
             : [],

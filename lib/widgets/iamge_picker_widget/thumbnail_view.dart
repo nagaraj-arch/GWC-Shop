@@ -16,7 +16,7 @@ class ThumbnailView extends StatefulWidget {
   final bool enablePreview;
 
   /// false = load immediately
-  /// true  = load only when visible
+  /// true = load only when visible
   final bool lazyLoad;
 
   const ThumbnailView({
@@ -45,17 +45,13 @@ class _ThumbnailViewState extends State<ThumbnailView> {
   void initState() {
     super.initState();
 
-    // Banner and all normal ThumbnailViews
-    // load immediately.
-    if (!widget.lazyLoad) {
-      _shouldLoad = true;
-    }
+    // Load immediately only when lazyLoad is false.
+    _shouldLoad = !widget.lazyLoad;
   }
 
   void _onVisibilityChanged(VisibilityInfo info) {
     if (_shouldLoad) return;
 
-    // Load only when Cover/Footer becomes visible.
     if (info.visibleFraction > 0) {
       if (!mounted) return;
 
@@ -68,8 +64,13 @@ class _ThumbnailViewState extends State<ThumbnailView> {
   void _openPreview() {
     debugPrint("ThumbnailView _openPreview");
 
-    if (widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty) {
-      showImagePreview(context: widget.context, imageUrl: widget.imageUrl);
+    final url = widget.imageUrl?.trim();
+
+    if (url != null && url.isNotEmpty && url != 'null') {
+      showImagePreview(
+        context: widget.context,
+        imageUrl: url,
+      );
     }
   }
 
@@ -77,7 +78,6 @@ class _ThumbnailViewState extends State<ThumbnailView> {
   Widget build(BuildContext context) {
     final child = _shouldLoad ? _buildImage() : _emptySpace();
 
-    // Normal image → no visibility detector required.
     if (!widget.lazyLoad) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -95,47 +95,80 @@ class _ThumbnailViewState extends State<ThumbnailView> {
     );
   }
 
-  /// Keeps the exact required space without showing
-  /// placeholder.png while waiting for the image.
   Widget _emptySpace() {
-    return SizedBox(width: widget.width, height: widget.height);
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+    );
   }
 
   Widget _buildImage() {
+    final String? originalUrl = widget.imageUrl?.trim();
+
+    if (originalUrl == null ||
+        originalUrl.isEmpty ||
+        originalUrl == 'null') {
+      return _errorImage();
+    }
+
+    // Avoid breaking URLs that already contain query parameters.
+    final String imageUrl = originalUrl.contains('?')
+        ? '$originalUrl&v=2'
+        : '$originalUrl?v=2';
+
     final VoidCallback? previewCallback = widget.enablePreview
         ? (widget.onTap ?? _openPreview)
         : widget.onTap;
 
-    if (widget.imageUrl == null ||
-        widget.imageUrl!.trim().isEmpty ||
-        widget.imageUrl == 'null') {
-      return _errorImage();
-    }
+    // IMPORTANT:
+    // width/height can be Infinity when ThumbnailView is inside
+    // an unbounded parent such as certain Row/Column/List layouts.
+    //
+    // Never call .round() on Infinity.
+    // final int? cacheWidth =
+    // widget.width != null &&
+    //     widget.width!.isFinite &&
+    //     widget.width! > 0
+    //     ? (widget.width! * 1.5).round()
+    //     : null;
+    //
+    // final int? cacheHeight =
+    // widget.height != null &&
+    //     widget.height!.isFinite &&
+    //     widget.height! > 0
+    //     ? (widget.height! * 1.5).round()
+    //     : null;
 
-    final imageUrl = "${widget.imageUrl!.trim()}?v=2";
+    // debugPrint(
+    //   'ThumbnailView dimensions: '
+    //       'width=${widget.width}, '
+    //       'height=${widget.height}, '
+    //       'cacheWidth=$cacheWidth, '
+    //       'cacheHeight=$cacheHeight',
+    // );
 
-    final image = Image.network(
+    final Widget image = Image.network(
       imageUrl,
 
-      // IMPORTANT:
-      // Keep this because your API/server needs CORS fallback.
-      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
-      // IMPORTANT:
-      // Keep your original fill behavior.
-      fit: widget.fit,
+      // Keep this for your current CORS/Web behavior.
+      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
 
       width: widget.width,
       height: widget.height,
 
+      // Only finite values are passed.
+      // cacheWidth: cacheWidth,
+      // cacheHeight: cacheHeight,
+
+      fit: widget.fit,
       filterQuality: FilterQuality.low,
 
       errorBuilder: (context, error, stackTrace) {
-        return Image.asset(
-          'assets/images/placeholder.png',
-          width: widget.width,
-          height: widget.height,
-          fit: widget.fit,
+        debugPrint(
+          'ThumbnailView image error: $imageUrl\n$error',
         );
+
+        return _errorImage();
       },
     );
 

@@ -117,10 +117,12 @@ class _FollowsRhythmState extends State<FollowsRhythm> {
 
     final desc = """
 <p style="font-family:'Courier Prime'; font-weight:400; font-size:inherit;font-style:italic;text-align: justify;"">
-  <span style="color:#786f68;">
-   Food-only products designed for the unique intervals<br/>
-    your gut needs care— from morning active nourishment<br/>
-     to a warm, comforting bowl at night.
+  <span style="color:#514A45;">
+   Food-only products designed<br>
+   for the unique intervals your<br>
+   gut needs care— from morning<br>
+   active nourishment to a warm,<br>
+   comforting bowl at night.
   </span>
 </p>
 """;

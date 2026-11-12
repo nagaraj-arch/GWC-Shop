@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +7,8 @@ import '../../../../controllers/providers/shop_provider.dart';
 import '../../../../utils/constants.dart';
 import '../../../../utils/responsive_helper.dart';
 import '../../../category_page/category_product_card.dart';
+import '../../../footer_widget/footer_section.dart';
+import '../best_seller_tab/best_seller_tab.dart';
 import 'category_by_products.dart';
 
 class AllProductsTab extends StatefulWidget {
@@ -21,7 +22,10 @@ class _AllProductsTabState extends State<AllProductsTab>
     with SingleTickerProviderStateMixin {
   TabController? _tabController;
 
-  int _selectedCategoryIndex = kDebugMode ? 4 : 0;
+  // 0 = Best Sellers
+  // 1+ = Normal categories
+  int _selectedCategoryIndex = 0;
+
   bool _firstProductsLoaded = false;
 
   @override
@@ -33,6 +37,10 @@ class _AllProductsTabState extends State<AllProductsTab>
     });
   }
 
+  // ==============================================================
+  // SETUP
+  // ==============================================================
+
   void _setupTabs() {
     if (!mounted) return;
 
@@ -41,38 +49,127 @@ class _AllProductsTabState extends State<AllProductsTab>
 
     if (categories.isEmpty) return;
 
-    if (_selectedCategoryIndex >= categories.length) {
+    // ============================================================
+    // FOOTER CATEGORY
+    // ============================================================
+
+    final pendingCategoryId = provider.pendingFooterCategoryId;
+
+    if (pendingCategoryId != null) {
+      final footerCategoryIndex = categories.indexWhere(
+        (category) => category.id == pendingCategoryId,
+      );
+
+      if (footerCategoryIndex != -1) {
+        // Best Sellers = 0
+        // Category starts from 1
+        _selectedCategoryIndex = footerCategoryIndex + 1;
+      }
+
+      provider.clearFooterCategory();
+    }
+
+    // +1 = Best Sellers
+    final totalTabs = categories.length + 1;
+
+    if (_selectedCategoryIndex < 0 || _selectedCategoryIndex >= totalTabs) {
       _selectedCategoryIndex = 0;
     }
 
     _createTabController(categories);
 
+    // ============================================================
+    // INITIAL CATEGORY API
+    // ============================================================
+
     if (!_firstProductsLoaded) {
       _firstProductsLoaded = true;
 
-      final firstCategory = categories[_selectedCategoryIndex];
+      // Don't call category API when Best Sellers is selected.
+      if (_selectedCategoryIndex > 0) {
+        final categoryIndex = _selectedCategoryIndex - 1;
 
-      if (firstCategory.id != null) {
-        provider.fetchProductsByCategory(firstCategory.id.toString());
+        final selectedCategory = categories[categoryIndex];
+
+        if (selectedCategory.id != null) {
+          provider.fetchProductsByCategory(selectedCategory.id.toString());
+        }
       }
     }
   }
 
-  void _createTabController(List<CategoryList> categories) {
-    if (!mounted || categories.isEmpty) return;
+  // ==============================================================
+  // FOOTER CATEGORY
+  // ==============================================================
 
-    if (_selectedCategoryIndex >= categories.length) {
+  void _handleFooterCategory() {
+    if (!mounted) return;
+
+    final provider = context.read<ShopProvider>();
+    final categories = provider.categories;
+
+    final pendingCategoryId = provider.pendingFooterCategoryId;
+
+    if (pendingCategoryId == null || categories.isEmpty) {
+      return;
+    }
+
+    final index = categories.indexWhere(
+      (category) => category.id == pendingCategoryId,
+    );
+
+    provider.clearFooterCategory();
+
+    if (index == -1) return;
+
+    // Best Sellers = 0
+    // Normal category = category index + 1
+    final tabIndex = index + 1;
+
+    setState(() {
+      _selectedCategoryIndex = tabIndex;
+    });
+
+    if (_tabController != null &&
+        _tabController!.length == categories.length + 1) {
+      _tabController!.animateTo(
+        tabIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    final categoryId = categories[index].id;
+
+    if (categoryId != null) {
+      provider.fetchProductsByCategory(categoryId.toString());
+    }
+  }
+
+  // ==============================================================
+  // TAB CONTROLLER
+  // ==============================================================
+
+  void _createTabController(List<CategoryList> categories) {
+    if (!mounted || categories.isEmpty) {
+      return;
+    }
+
+    // +1 = Best Sellers
+    final totalTabs = categories.length + 1;
+
+    if (_selectedCategoryIndex < 0 || _selectedCategoryIndex >= totalTabs) {
       _selectedCategoryIndex = 0;
     }
 
-    if (_tabController != null && _tabController!.length == categories.length) {
+    if (_tabController != null && _tabController!.length == totalTabs) {
       return;
     }
 
     _tabController?.dispose();
 
     _tabController = TabController(
-      length: categories.length,
+      length: totalTabs,
       vsync: this,
       initialIndex: _selectedCategoryIndex,
     );
@@ -81,23 +178,55 @@ class _AllProductsTabState extends State<AllProductsTab>
       final controller = _tabController;
 
       if (controller == null) return;
-      if (controller.indexIsChanging) return;
+
+      if (controller.indexIsChanging) {
+        return;
+      }
 
       final index = controller.index;
 
-      if (index < 0 || index >= categories.length) return;
+      if (index < 0 || index >= totalTabs) {
+        return;
+      }
 
-      _onCategorySelected(index, categories[index]);
+      // ==========================================================
+      // BEST SELLERS - INDEX 0
+      // ==========================================================
+
+      if (index == 0) {
+        if (!mounted) return;
+
+        setState(() {
+          _selectedCategoryIndex = 0;
+        });
+
+        return;
+      }
+
+      // ==========================================================
+      // NORMAL CATEGORY
+      // ==========================================================
+
+      final categoryIndex = index - 1;
+
+      if (categoryIndex >= 0 && categoryIndex < categories.length) {
+        _onCategorySelected(categoryIndex, categories[categoryIndex]);
+      }
     });
 
     setState(() {});
   }
 
+  // ==============================================================
+  // CATEGORY SELECT
+  // ==============================================================
+
   Future<void> _onCategorySelected(int index, CategoryList category) async {
     if (!mounted) return;
 
+    // +1 because Best Sellers occupies index 0.
     setState(() {
-      _selectedCategoryIndex = index;
+      _selectedCategoryIndex = index + 1;
     });
 
     final categoryId = category.id;
@@ -109,78 +238,142 @@ class _AllProductsTabState extends State<AllProductsTab>
     );
   }
 
+  // ==============================================================
+  // DISPOSE
+  // ==============================================================
+
   @override
   void dispose() {
     _tabController?.dispose();
     super.dispose();
   }
 
+  // ==============================================================
+  // BUILD
+  // ==============================================================
+
   @override
   Widget build(BuildContext context) {
     final responsive = ScreenSizeHelper(context);
-    final provider = context.watch<ProductsProvider>();
 
-    return provider.searchController.text.isNotEmpty
-        ? SingleChildScrollView(
-          child: Column(
-              children: [
-                SizedBox(height: 40),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.isMobile || responsive.isTablet
-                        ? 20
-                        : 80.0,
-                  ),
-                  child: AdditionalProductsGrid(
-                    products: provider.filteredAdditionalProducts,
-                    isShop: true,
-                  ),
-                ),
-                SizedBox(height: 40),
-              ],
+    final productsProvider = context.watch<ProductsProvider>();
+
+    final shopProvider = context.watch<ShopProvider>();
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+
+    if (productsProvider.searchController.text.isNotEmpty) {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: responsive.isMobile || responsive.isTablet
+                    ? 20
+                    : 80.0,
+              ),
+              child: AdditionalProductsGrid(
+                products: productsProvider.filteredAdditionalProducts,
+                isShop: true,
+              ),
             ),
-        )
-        : Consumer<ShopProvider>(
-            builder: (context, shopProvider, child) {
-              final categories = shopProvider.categories;
 
-              // DashboardScreen handles the category loading indicator.
-              if (categories.isEmpty) {
-                return const SizedBox.shrink();
+            const SizedBox(height: 40),
+          ],
+        ),
+      );
+    }
+
+    // ============================================================
+    // PRODUCTS
+    // ============================================================
+
+    return PageView(
+      controller: shopProvider.shopPageController,
+      onPageChanged: shopProvider.changeShopPage,
+      children: [
+        Consumer<ShopProvider>(
+          builder: (context, shopProvider, child) {
+            final categories = shopProvider.categories;
+
+            if (categories.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _handleFooterCategory();
               }
+            });
 
-              if (_selectedCategoryIndex >= categories.length) {
-                _selectedCategoryIndex = 0;
-              }
+            // +1 because Best Sellers is
+            // the first tab.
+            if (_selectedCategoryIndex > categories.length) {
+              _selectedCategoryIndex = 0;
+            }
 
-              if (_tabController == null ||
-                  _tabController!.length != categories.length) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _createTabController(categories);
-                  }
-                });
+            // ======================================================
+            // CREATE TAB CONTROLLER
+            // ======================================================
 
-                return const SizedBox.shrink();
-              }
+            if (_tabController == null ||
+                _tabController!.length != categories.length + 1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _createTabController(categories);
+                }
+              });
 
-              final selectedCategory = categories[_selectedCategoryIndex];
+              return const SizedBox.shrink();
+            }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildCategoryTabBar(categories),
-                  Expanded(
-                    child: CategoryByProducts(
-                      key: ValueKey(selectedCategory.id),
-                      category: selectedCategory,
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
+            // ======================================================
+            // BEST SELLER CHECK
+            // ======================================================
+
+            final isBestSeller = _selectedCategoryIndex == 0;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ==================================================
+                // CATEGORY TAB BAR
+                // ==================================================
+                _buildCategoryTabBar(categories),
+
+                // ==================================================
+                // CONTENT
+                // ==================================================
+                Expanded(
+                  child: isBestSeller
+                      ? SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: const [BestSellerTab(), GwcFooter()],
+                          ),
+                        )
+                      : CategoryByProducts(
+                          key: ValueKey(
+                            categories[_selectedCategoryIndex - 1].id,
+                          ),
+                          category: categories[_selectedCategoryIndex - 1],
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
   }
+
+  // ==============================================================
+  // CATEGORY TAB BAR
+  // ==============================================================
 
   Widget _buildCategoryTabBar(List<CategoryList> categories) {
     final isMobile = ScreenSizeHelper(context).isMobile;
@@ -209,32 +402,64 @@ class _AllProductsTabState extends State<AllProductsTab>
           dividerColor: Colors.transparent,
           overlayColor: WidgetStateProperty.all(Colors.transparent),
           splashFactory: NoSplash.splashFactory,
-          tabs: List.generate(categories.length, (index) {
-            final category = categories[index];
-            return _CategoryTabItem(
+
+          // ========================================================
+          // TABS
+          // ========================================================
+          tabs: [
+            // ======================================================
+            // BEST SELLERS - FIRST TAB
+            // ======================================================
+            _CategoryTabItem(
               controller: _tabController!,
-              index: index,
-              categoryName: category.name ?? '',
+              index: 0,
+              categoryName: 'Best Sellers',
               isMobile: isMobile,
-            );
-          }),
+              isBestSeller: true,
+            ),
+
+            // ======================================================
+            // EXISTING CATEGORY TABS
+            // ======================================================
+            ...List.generate(categories.length, (index) {
+              final category = categories[index];
+
+              return _CategoryTabItem(
+                controller: _tabController!,
+
+                // +1 because Best Sellers
+                // is index 0.
+                index: index + 1,
+
+                categoryName: category.name ?? '',
+
+                isMobile: isMobile,
+              );
+            }),
+          ],
         ),
       ),
     );
   }
 }
 
+// ==================================================================
+// CATEGORY TAB ITEM
+// ==================================================================
+
 class _CategoryTabItem extends StatefulWidget {
   final TabController controller;
   final int index;
   final String categoryName;
   final bool isMobile;
+  final bool isBestSeller;
 
   const _CategoryTabItem({
     required this.controller,
     required this.index,
     required this.categoryName,
     required this.isMobile,
+    this.isBestSeller = false,
   });
 
   @override
@@ -247,24 +472,29 @@ class _CategoryTabItemState extends State<_CategoryTabItem> {
   @override
   void initState() {
     super.initState();
+
     widget.controller.addListener(_onTabChanged);
   }
 
   void _onTabChanged() {
     if (!mounted) return;
+
     setState(() {});
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onTabChanged);
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isSelected = widget.controller.index == widget.index;
+
     final double tabWidth = widget.isMobile ? 76 : 118;
+
     return MouseRegion(
       onEnter: (_) {
         if (!widget.isMobile) {
@@ -298,9 +528,11 @@ class _CategoryTabItemState extends State<_CategoryTabItem> {
                 height: widget.isMobile ? 30 : 34,
                 child: Center(child: _buildExistingIcon(isSelected)),
               ),
+
               SizedBox(height: widget.isMobile ? 3 : 4),
+
               SizedBox(
-                height: widget.isMobile ? 25 : 25,
+                height: 25,
                 width: double.infinity,
                 child: Text(
                   widget.categoryName,
@@ -324,7 +556,54 @@ class _CategoryTabItemState extends State<_CategoryTabItem> {
     );
   }
 
+  // ==============================================================
+  // ICON
+  // ==============================================================
+
   Widget _buildExistingIcon(bool isSelected) {
+    // ============================================================
+    // BEST SELLER ICON
+    // ============================================================
+
+    if (widget.isBestSeller) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: widget.isMobile ? 28 : 32,
+        height: widget.isMobile ? 28 : 32,
+        child: Center(
+          child: Container(
+            padding: EdgeInsets.all(widget.isMobile ? 1.5 : 2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: gWhiteColor,
+              border: Border.all(
+                color: isSelected ? gMainColor : gPrimaryColor,
+                width: isSelected ? 1.5 : 0,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: gBlackColor.withAlpha(20),
+                        blurRadius: 5,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Icon(
+              Icons.local_fire_department_rounded,
+              color: isSelected ? gMainColor : gPrimaryColor,
+              size: widget.isMobile ? 14 : 17,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ============================================================
+    // EXISTING CATEGORY ICONS
+    // ============================================================
+
     IconData getCategoryIcon(String name) {
       switch (name.toLowerCase().trim()) {
         case 'food farmacy':
@@ -393,9 +672,9 @@ class _CategoryTabItemState extends State<_CategoryTabItem> {
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             padding: EdgeInsets.all(widget.isMobile ? 3 : 4),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: isSelected ? gWhiteColor : gWhiteColor,
+              color: gWhiteColor,
             ),
             child: Icon(
               getCategoryIcon(widget.categoryName),

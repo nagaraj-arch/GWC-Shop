@@ -70,7 +70,10 @@ class _CommonCartButtonState extends State<CommonCartButton> {
   }
 
   Widget _addButton(CartProvider cartManager, ScreenSizeHelper responsive) {
-    if(widget.product.hasFlavours == "1"){
+
+    // debugPrint("HAS FLAVOURS : ${widget.product.hasFlavours}");
+
+    if (widget.product.hasFlavours == "1") {
       return Container(
         height: widget.height,
         decoration: BoxDecoration(
@@ -80,16 +83,15 @@ class _CommonCartButtonState extends State<CommonCartButton> {
         alignment: Alignment.center,
         child: Center(
           child: Text(
-              "LAUNCHING SOON",
-              style: GoogleFonts.robotoCondensed(
-                fontSize: fontSize10,
-                fontWeight: FontWeight.w700,
-                color: gBlackColor,
-              )
+            "LAUNCHING SOON",
+            style: GoogleFonts.robotoCondensed(
+              fontSize: fontSize10,
+              fontWeight: FontWeight.w700,
+              color: gBlackColor,
+            ),
           ),
         ),
-
-    );
+      );
     }
     return InkWell(
       onTap: () {
@@ -120,11 +122,11 @@ class _CommonCartButtonState extends State<CommonCartButton> {
         child: Center(
           child: Text(
             "ADD TO CART",
-              style: GoogleFonts.robotoCondensed(
-                fontSize: fontSize10,
-                fontWeight: FontWeight.w700,
-                color: gBlackColor,
-              )
+            style: GoogleFonts.robotoCondensed(
+              fontSize: fontSize10,
+              fontWeight: FontWeight.w700,
+              color: gBlackColor,
+            ),
           ),
         ),
       ),
@@ -166,11 +168,11 @@ class _CommonCartButtonState extends State<CommonCartButton> {
               child: Text(
                 "$quantity",
                 key: ValueKey(quantity),
-                  style: GoogleFonts.robotoCondensed(
-                    fontSize: fontSize10,
-                    fontWeight: FontWeight.w700,
-                    color: gBlackColor,
-                  )
+                style: GoogleFonts.robotoCondensed(
+                  fontSize: fontSize10,
+                  fontWeight: FontWeight.w700,
+                  color: gBlackColor,
+                ),
               ),
             ),
 

@@ -19,6 +19,7 @@ import '../../../../widgets/iamge_picker_widget/thumbnail_view.dart';
 import '../../../category_page/category_banner.dart';
 import '../../../category_page/category_product_card.dart';
 import '../../../category_page/footer_section.dart';
+import '../../widgets/banner_section.dart';
 import 'widgets/add_as_combo_banner.dart';
 
 class FoodFarmacyTab extends StatefulWidget {
@@ -234,7 +235,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
           )
         : Column(
             children: [
-              CategoryBanner(
+              BannerSection(
                 category: foodFarmacyCategory,
                 isFoodFarmacy: _scrollToFormulation,
               ),
@@ -246,7 +247,7 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                   children: [
                     buildIntroSection(
                       context,
-                      "WHAT IS YOUR GUT POINTING TO?",
+                      "CHOOSE WHAT FEELS FAMILIAR",
                       foodFarmacyCategory.subTextHeading ?? "",
                       foodFarmacyCategory.subTextDescription ?? "",
                     ),
@@ -271,7 +272,6 @@ class _FoodFarmacyTabState extends State<FoodFarmacyTab> {
                   ],
                 ),
               ),
-              SizedBox(height: 40),
               if (showCoverSection) ...[
                 Builder(
                   key: _coverImageKey,
@@ -591,11 +591,11 @@ Discount Price  : ${product.discountPrice}
           ),
           const SizedBox(height: 40),
           if (clusterProducts.length > 1) ...[
-            const SizedBox(height: 20),
 
             AddAsComboBanner(
               products: clusterProducts,
               category: category,
+              cluster: selectedCluster,
               originalPrice: clusterProducts.fold<double>(
                 0,
                 (sum, product) =>

@@ -61,6 +61,7 @@ dependencies:
 
   carousel_slider: ^5.1.2
   smooth_page_indicator: ^1.2.0+3
+  image_network: ^2.6.0
 
 dev_dependencies:
   flutter_test:

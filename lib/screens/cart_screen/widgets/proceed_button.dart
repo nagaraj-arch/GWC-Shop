@@ -63,7 +63,6 @@ class _ProceedButtonState extends State<ProceedButton> {
                   },
             isLoading: cart.isLoading(CartLoadingType.emailOtp),
             radius: 8,
-            buttonHeight: isDesktop ? 6.h : 5.h,
           ),
         );
       }
@@ -81,7 +80,6 @@ class _ProceedButtonState extends State<ProceedButton> {
                 },
           isLoading: cart.isLoading(CartLoadingType.submitItems),
           radius: 8,
-          buttonHeight: isDesktop ? 6.h : 5.h,
         ),
       );
     });

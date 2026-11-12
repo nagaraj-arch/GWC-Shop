@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sizer/flutter_sizer.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gwc_shop/widgets/loading_widgets/loading_indicator.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/providers/cart_provider.dart';
@@ -21,6 +22,7 @@ import 'widgets/cart_empty_widget.dart';
 import 'widgets/cart_items_widget.dart';
 import 'widgets/cart_title_widget.dart';
 import 'widgets/coupon_widget.dart';
+import 'widgets/phone_otp_dialog.dart';
 import 'widgets/proceed_button.dart';
 
 class CartScreen extends StatefulWidget {
@@ -34,6 +36,7 @@ class _CartScreenState extends State<CartScreen>
     with SingleTickerProviderStateMixin {
   bool showProducts = false;
   final formKey = GlobalKey<FormState>();
+  final phoneOtpController = TextEditingController();
 
   final FocusNode emailFocusNode = FocusNode();
   final FocusNode phoneFocusNode = FocusNode();
@@ -138,12 +141,14 @@ class _CartScreenState extends State<CartScreen>
             Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 6.w : 3.w, vertical: 2.h),
+                  horizontal: isDesktop ? 6.w : 3.w,
+                  vertical: 2.h,
+                ),
                 child: cart.items.isEmpty
                     ? CartEmptyWidget()
                     : isDesktop
-                        ? desktopView(cart, isDesktop)
-                        : mobileView(cart, isDesktop),
+                    ? desktopView(cart, isDesktop)
+                    : mobileView(cart, isDesktop),
               ),
             ),
           ],
@@ -174,9 +179,7 @@ class _CartScreenState extends State<CartScreen>
                       const CommonDivider(color: borderColor),
                       SizedBox(height: 1.h),
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: CartItemsWidget(),
-                        ),
+                        child: SingleChildScrollView(child: CartItemsWidget()),
                       ),
                     ],
                   ),
@@ -214,12 +217,7 @@ class _CartScreenState extends State<CartScreen>
           left: 0,
           right: 0,
           bottom: isKeyboardOpen ? -120 : 0,
-          child: SafeArea(
-            top: false,
-            child: ProceedButton(
-              formKey: formKey,
-            ),
-          ),
+          child: SafeArea(top: false, child: ProceedButton(formKey: formKey)),
         ),
       ],
     );
@@ -303,8 +301,9 @@ class _CartScreenState extends State<CartScreen>
             CouponWidget(),
             SizedBox(height: 2.h),
             CommonSectionHeader(
-                icon: Icons.local_shipping_outlined,
-                title: "Delivery Information"),
+              icon: Icons.local_shipping_outlined,
+              title: "Delivery Information",
+            ),
             const CommonDivider(opacity: 0.4),
             Form(key: formKey, child: buildForm(provider)),
             // isDesktop
@@ -324,29 +323,169 @@ class _CartScreenState extends State<CartScreen>
     );
   }
 
- Widget buildForm(CartProvider provider) {
+  Widget buildForm(CartProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 1.h),
+
         LabelWidget(
           text: 'Phone',
           isRequired: true,
-          child: CustomTextField(
-            controller: provider.phoneController,
-            hintText: "Phone",
-            prefixIcon: Icons.phone_outlined,
-            contentPadding: 0,
-            borderType: TextFieldBorderType.full,
-            keyboardType: TextInputType.phone,
-            focusNode: phoneFocusNode,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomTextField(
+                controller: provider.phoneController,
+                hintText: 'Enter your 10-digit phone number',
+                prefixIcon: Icons.phone_iphone_rounded,
+                contentPadding: 0,
+                borderType: TextFieldBorderType.full,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                validator: ValidationUtils().phoneValidator,
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+
+              if (provider.phoneController.text.trim().length == 10 &&
+                  ValidationUtils().phoneValidator(
+                    provider.phoneController.text.trim(),
+                  ) ==
+                      null) ...[
+                SizedBox(height: 10),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: gPrimaryColor.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: gPrimaryColor.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 34,
+                        width: 34,
+                        decoration: BoxDecoration(
+                          color: gPrimaryColor.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.person_search_rounded,
+                          color: gPrimaryColor,
+                          size: 19,
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Existing customer?',
+                              style: TextStyle(
+                                fontFamily: fontMedium,
+                                fontSize: fontSize10,
+                                color: gBlackColor,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Fetch your saved delivery details',
+                              style: TextStyle(
+                                fontSize: fontSize10 * 0.9,
+                                color: gHintTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      TextButton(
+                        onPressed: provider.isLoading(CartLoadingType.phoneOtp)
+                            ? null
+                            : () => _showPhoneOtpDialog(provider),
+                        style: TextButton.styleFrom(
+                          foregroundColor: gPrimaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9),
+                            side: BorderSide(
+                              color: gPrimaryColor.withValues(alpha: 0.25),
+                            ),
+                          ),
+                        ),
+                        child: provider.isLoading(CartLoadingType.phoneOtp)
+                            ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: gPrimaryColor,
+                          ),
+                        )
+                            : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Get Details',
+                              style: TextStyle(
+                                fontFamily: fontMedium,
+                                fontSize: fontSize10,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 15,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-            validator: ValidationUtils().phoneValidator,
           ),
         ),
+
+        // LabelWidget(
+        //   text: 'Phone',
+        //   isRequired: true,
+        //   child: CustomTextField(
+        //     controller: provider.phoneController,
+        //     hintText: "Phone",
+        //     prefixIcon: Icons.phone_outlined,
+        //     contentPadding: 0,
+        //     borderType: TextFieldBorderType.full,
+        //     keyboardType: TextInputType.phone,
+        //     focusNode: phoneFocusNode,
+        //     inputFormatters: [
+        //       FilteringTextInputFormatter.digitsOnly,
+        //       LengthLimitingTextInputFormatter(10),
+        //     ],
+        //     validator: ValidationUtils().phoneValidator,
+        //   ),
+        // ),
         SizedBox(height: 2.h),
         LabelWidget(
           text: 'Recipient Full Name',
@@ -412,7 +551,8 @@ class _CartScreenState extends State<CartScreen>
             borderType: TextFieldBorderType.full,
             focusNode: pinFocusNode, // 🔥 IMPORTANT
             hintText: "Enter your Pin Code",
-            contentPadding: 0, prefixIcon: Icons.pin_drop_outlined,
+            contentPadding: 0,
+            prefixIcon: Icons.pin_drop_outlined,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -468,11 +608,7 @@ class _CartScreenState extends State<CartScreen>
   Widget buildDeliveryTitle() {
     return Row(
       children: [
-        Icon(
-          Icons.inventory_2_outlined,
-          size: 2.h,
-          color: gPrimaryColor,
-        ),
+        Icon(Icons.inventory_2_outlined, size: 2.h, color: gPrimaryColor),
         const SizedBox(width: 8),
         Text(
           "DELIVERY DETAILS & PRESERVATIONS",
@@ -483,6 +619,55 @@ class _CartScreenState extends State<CartScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showPhoneOtpDialog(CartProvider provider) async {
+    final phone = provider.phoneController.text.trim();
+
+    // Validate phone before calling the API.
+    if (phone.length != 10 || ValidationUtils().phoneValidator(phone) != null) {
+      AppConfig().showSnackBar(
+        context,
+        'Please enter a valid phone number',
+        isError: true,
+      );
+      return;
+    }
+
+    // Request OTP first. Never open the popup on failure.
+    final sent = await provider.sendPhoneOtp(context, phone);
+
+    if (!mounted || !sent || provider.phoneOtp.isEmpty) {
+      return;
+    }
+
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Phone OTP Verification',
+      barrierColor: Colors.black.withValues(alpha: 0.60),
+      transitionDuration: const Duration(milliseconds: 450),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        return Center(
+          child: PhoneOtpDialog(phone: phone, provider: provider),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.82, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

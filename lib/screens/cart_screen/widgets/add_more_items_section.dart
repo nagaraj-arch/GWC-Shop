@@ -66,7 +66,7 @@ class AddMoreItemsSection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 215,
+          height: 225,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(

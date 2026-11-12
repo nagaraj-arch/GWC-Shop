@@ -48,6 +48,11 @@ class GwcApi {
 
   static String baseUrl = "https://gutandhealth.com";
 
+  static String submitDoctorCallUrl() => "$baseUrl/api/website-call-requests";
+
+  static String sendVisitorsDetailsApiUrl() =>
+      "$baseUrl/api/website-engagements";
+
   ///Shop Api's
   static String getCategoryListApiUrl() =>
       "$baseUrl/api/list/getIngredientCategory";
@@ -57,5 +62,9 @@ class GwcApi {
 
   static String getClusterListApiUrl() =>
       "$baseUrl/api/list/getAdditionalClusterListings";
+
+  static String getPhoneOtpUrl(String phone) => "${AppConfig().baseUrl}postData/send_user_phone_otp?phone=$phone";
+
+  static String getPhoneUserDetailsUrl(String phone) => "${AppConfig().baseUrl}postData/offlineGetEvaluation?phone=$phone";
 
 }

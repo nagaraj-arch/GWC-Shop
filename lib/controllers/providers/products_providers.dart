@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/api_urls.dart';
+import '../../utils/app_config.dart';
 import '../../utils/network_service.dart';
 import '../models/get_additional_products_model/get_additional_products_model.dart';
 import '../models/get_additional_products_model/get_gwc_products_model.dart';
@@ -13,6 +13,7 @@ enum LoadingType {
   getAdditionalProducts,
   productFlavors,
   submitProducts,
+  submitDoctorCall,
 }
 
 class ProductsProvider extends ChangeNotifier {
@@ -34,7 +35,54 @@ class ProductsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool submitLoading = false;
+  /// Doctor Website Call
+
+
+  Future<bool> submitDoctorCallApi(
+      BuildContext context,
+      Map<String, dynamic> body,
+      ) async {
+    setLoading(LoadingType.submitDoctorCall, true);
+
+    try {
+      debugPrint('DOCTOR CALL REQUEST: $body');
+
+      final res = await NetworkService.post(
+        GwcApi.submitDoctorCallUrl(),
+        body,
+      );
+
+      debugPrint('DOCTOR CALL RESPONSE: $res');
+
+      if (res['status'] == 200) {
+        return true;
+      }
+
+      final message = res['errorMsg'] ??
+          res['message'] ??
+          'Unable to submit your request. Please try again.';
+
+      AppConfig().showSnackBar(
+        context,
+        message.toString(),
+        isError: true,
+      );
+
+      return false;
+    } catch (e) {
+      debugPrint('DOCTOR CALL ERROR: $e');
+
+      AppConfig().showSnackBar(
+        context,
+        'Unable to submit your request. Please try again.',
+        isError: true,
+      );
+
+      return false;
+    } finally {
+      setLoading(LoadingType.submitDoctorCall, false);
+    }
+  }
 
   Map<String, List<GwcProducts>> details = {};
   List<MapEntry<String, GwcProducts>> filteredItems = [];
@@ -132,7 +180,7 @@ class ProductsProvider extends ChangeNotifier {
   /// ADDITIONAL PRODUCTS
 
   List<Products> additionalProducts = [];
-  List<Products> foodFarmacyProducts =[];
+  List<Products> foodFarmacyProducts = [];
 
   bool isSearchOpen = false;
 
@@ -168,7 +216,10 @@ class ProductsProvider extends ChangeNotifier {
     setLoading(LoadingType.getAdditionalProducts, true);
 
     try {
-      final data = await NetworkService.get(getAdditionalProductsUrl);
+      final data = await NetworkService.get(
+        getAdditionalProductsUrl,
+        showResponse: false,
+      );
 
       if (data['success'] == true) {
         final model = GetAdditionalProductsModel.fromJson(data);
@@ -182,19 +233,15 @@ class ProductsProvider extends ChangeNotifier {
         additionalProducts = allProducts;
 
         additionalProducts.sort((a, b) {
-          final orderA =
-              int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
-          final orderB =
-              int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
+          final orderA = int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
+          final orderB = int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
 
           return orderA.compareTo(orderB);
         });
 
         foodFarmacyProducts.sort((a, b) {
-          final orderA =
-              int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
-          final orderB =
-              int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
+          final orderA = int.tryParse(a.orderBy?.toString() ?? "") ?? 999999;
+          final orderB = int.tryParse(b.orderBy?.toString() ?? "") ?? 999999;
 
           return orderA.compareTo(orderB);
         });
